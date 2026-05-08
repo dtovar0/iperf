@@ -195,6 +195,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script>
     function handleNewTest() {
         // Ejecutar iperf3 -s
         fetch("{{ url_for('iperf.start_server') }}", {
