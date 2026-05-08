@@ -73,10 +73,10 @@ Todas las pruebas de iperf3 deben ejecutarse de forma asíncrona o mediante un p
 Cuando un usuario inicia un test a 192.168.1.1, la UI muestra un spinner y el estado cambia a "Running". Al finalizar, se guarda el JSON de salida y se muestra en un modal de resultados.
 
 ### Regla: Orquestación de Servidor (iperf3)
-El botón principal de la interfaz de iperf3 está destinado exclusivamente a la activación del servidor local (`iperf3 -s`). El sistema debe garantizar un inicio limpio; si ya existe una instancia de iperf3 en ejecución, esta debe ser finalizada antes de lanzar el nuevo proceso.
+El botón principal de la interfaz de iperf3 garantiza un inicio limpio mediante la limpieza agresiva del entorno. Antes de lanzar el servidor, el sistema DEBE finalizar cualquier proceso `iperf3` existente (SIGKILL) y liberar forzosamente el puerto `5201/tcp` mediante `fuser`.
 
 ### Ejemplo
-Cuando el usuario presiona "Start iperf3 Server", el backend ejecuta un `pkill` preventivo sobre procesos iperf3 previos y luego lanza `iperf3 -s -D`. Esto asegura la disponibilidad del puerto 5201.
+Al presionar "Start iperf3 Server", el backend ejecuta `pkill -9 iperf3` seguido de `fuser -k 5201/tcp` y una pausa de 1 segundo antes del `iperf3 -s -D`. Esto previene el error "Address already in use".
 
 ### Impacto
 Disponibilidad del servicio de pruebas, Módulo iperf, UX.

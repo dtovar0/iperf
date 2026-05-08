@@ -85,9 +85,15 @@ class IperfService:
 
     @staticmethod
     def stop_server():
-        """Detiene el servidor iperf3."""
+        """Detiene agresivamente cualquier proceso iperf3."""
         try:
-            subprocess.run(['pkill', '-f', 'iperf3 -s'])
-            return True, "Server stopped"
+            import time
+            # Matar todos los procesos iperf3 de forma agresiva
+            subprocess.run(['pkill', '-9', 'iperf3'])
+            # Intentar liberar el puerto 5201 si fuser está disponible
+            subprocess.run(['fuser', '-k', '5201/tcp'], capture_output=True)
+            # Pequeña espera para asegurar que el SO libere el socket
+            time.sleep(1)
+            return True, "Server stopped and port cleared"
         except Exception as e:
             return False, str(e)
