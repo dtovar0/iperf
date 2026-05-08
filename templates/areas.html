@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Áreas | Nexus Premium{% endblock %}
+
+{% block breadcrumbs %}
+<span class="text-secondary cursor-pointer hover:text-primary transition-colors" onclick="window.location.href='/'">Inicio</span>
+<svg class="w-4 h-4 text-label/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+<span class="text-primary font-bold">Áreas</span>
+{% endblock %}
+
+{% block content %}
+<div id="areasWrapper" class="w-full h-full p-6 overflow-hidden flex flex-col">
+    <!-- PANEL AREA -->
+    <div class="flex-1 min-h-0 flex flex-col">
+        <div id="tab-panel-areas" class="tab-panel tab-panel-content flex-1 min-h-0 flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-500 rounded-xl border border-panel-border shadow-2xl shadow-primary/5 overflow-hidden">
+            
+            <header class="flex-shrink-0 bg-panel-header border-b border-panel-border px-6 py-6 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
+                        <i class="fas fa-sitemap text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-black tracking-tighter text-primary uppercase italic leading-none">
+                            Gestión de Áreas</h2>
+                        <p class="text-[12px] text-primary/60 font-bold tracking-widest uppercase mt-0.5">Gestión Organizacional / Recursos</p>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 min-h-0 flex flex-col overflow-hidden px-4 pt-3 pb-1">
+                <!-- Toolbar: Search + Buttons -->
+                <div class="flex-shrink-0 mb-3 mt-2 flex justify-between items-center gap-2">
+                    <div class="relative group flex-grow max-w-md">
+                        <svg class="w-4 h-4 absolute left-5 top-1/2 -translate-y-1/2 text-label/60 group-focus-within:text-primary transition-colors z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <input type="text" id="areaSearch" placeholder="Buscar área o descripción..."
+                            class="w-full bg-input-bg border-2 border-panel-border rounded-xl pl-12 pr-5 py-3 text-sm font-bold text-input outline-none focus:border-input-focus focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-label/50">
+                    </div>
+
+                    <!-- Botones de Acción Globales -->
+                    <div class="flex items-center gap-2">
+                        <button id="btnEditArea" class="nexus-btn nexus-btn-secondary !text-label !border-panel-border disabled:opacity-30 disabled:pointer-events-none" disabled>
+                            <i class="fas fa-edit"></i>
+                            <span>Modificar</span>
+                        </button>
+                        <button id="btnDeleteArea" class="nexus-btn nexus-btn-secondary !text-rose-500 !border-rose-500/20 disabled:opacity-30 disabled:pointer-events-none" disabled>
+                            <i class="fas fa-trash-alt"></i>
+                            <span>Eliminar</span>
+                        </button>
+                        <button onclick="openAreaModal()" class="nexus-btn nexus-btn-primary">
+                            <i class="fas fa-plus"></i>
+                            <span>Nueva Área</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex-1 min-h-0 flex flex-col">
+                    <div class="dt-container flex-1 min-h-0 flex flex-col">
+                        <div class="dt-layout-row dt-layout-table flex-1 min-h-0 overflow-hidden">
+                            <div class="dt-layout-cell flex-1 min-h-0 flex flex-col">
+                                <table class="w-full text-left table-fixed dataTable">
+                                    <thead class="sticky top-0 z-20">
+                                        <tr class="bg-slate-900/80 backdrop-blur-md">
+                                            <th class="w-[5%] text-center" style="border-left:3px solid transparent;padding:0 0.5rem;">
+                                                <input type="checkbox" id="selectAllAreas" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary flex-shrink-0 cursor-pointer mx-auto">
+                                            </th>
+                                            <th class="w-[8%] text-center">Ícono</th>
+                                            <th class="w-[20%] text-left">Área</th>
+                                            <th class="w-[30%] text-left">Descripción</th>
+                                            <th class="w-[12%] text-center">Estado</th>
+                                            <th class="w-[10%] text-center">Usuarios</th>
+                                            <th class="w-[15%] text-center">Plataformas</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="areasTableBody">
+                                        <!-- Dinámico -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div id="areasPagination"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Modificar (3 Pasos) --><!-- Modal de Nueva Área (3 Pasos) -->
+<div id="areaModal" class="nexus-modal hidden fixed inset-0 z-[110] items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="nexus-modal-content w-full max-w-2xl bg-panel-fill border border-panel-border rounded-xl shadow-2xl overflow-hidden shadow-black/50 ring-1 ring-white/10">
+        <form id="areaForm" class="flex flex-col h-full overflow-hidden">
+            <input type="hidden" id="areaId">
+            <div class="p-6 border-b border-panel-border flex items-center justify-between bg-surface-container/30">
+                <div>
+                    <h3 id="modalTitle" class="text-xl font-black text-primary uppercase tracking-tighter italic">Nueva Área</h3>
+                    <p class="text-[10px] text-label font-bold uppercase tracking-widest mt-0.5">Gestión Organizacional / Identidad</p>
+                </div>
+                <button type="button" onclick="closeAreaModal()" class="p-2 hover:bg-surface-container rounded-xl transition-all"><i class="fas fa-times text-label"></i></button>
+            </div>
+
+            <!-- Pre-Header: Step Indicator -->
+            <div class="px-8 pt-6 pb-2">
+                <div class="flex items-center justify-between relative">
+                    <!-- Progress Line -->
+                    <div class="absolute top-5 left-0 w-full h-0.5 bg-panel-border z-0">
+                        <div id="stepProgress" class="h-full bg-primary transition-all duration-500" style="width: 0%;"></div>
+                    </div>
+                    
+                    <!-- Step 1 -->
+                    <div class="step-item flex flex-col items-center gap-2 z-10" data-step="1">
+                        <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-black text-sm shadow-lg shadow-primary/20 ring-4 ring-panel-fill transition-all">1</div>
+                        <span class="text-[9px] font-black uppercase tracking-widest text-primary">Datos</span>
+                    </div>
+                    <!-- Step 2 -->
+                    <div class="step-item flex flex-col items-center gap-2 z-10" data-step="2">
+                        <div class="w-10 h-10 rounded-full bg-panel-border text-label/40 flex items-center justify-center font-black text-sm ring-4 ring-panel-fill transition-all">2</div>
+                        <span class="text-[9px] font-black uppercase tracking-widest text-label/40">Imagen</span>
+                    </div>
+                    <!-- Step 3 -->
+                    <div class="step-item flex flex-col items-center gap-2 z-10" data-step="3">
+                        <div class="w-10 h-10 rounded-full bg-panel-border text-label/40 flex items-center justify-center font-black text-sm ring-4 ring-panel-fill transition-all">3</div>
+                        <span class="text-[9px] font-black uppercase tracking-widest text-label/40">Usuarios</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-8 min-h-[480px] overflow-y-auto custom-scrollbar">
+                <!-- STEP 1: BASIC DATA -->
+                <div id="stepSection1" class="step-section space-y-6">
+                    <div class="space-y-2 group">
+                        <label class="text-[11px] font-black text-label/40 uppercase tracking-widest ml-1 group-focus-within:text-primary transition-colors">Nombre del Área</label>
+                        <input type="text" id="areaName" placeholder="EJ: RECURSOS HUMANOS" 
+                               class="w-full h-12 bg-input-bg border-2 border-panel-border rounded-xl px-6 text-sm font-bold text-input outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/10 transition-all premium-validate" required data-validation-type="text">
+                    </div>
+                    <div class="space-y-2 group">
+                        <label class="text-[11px] font-black text-label/40 uppercase tracking-widest ml-1 group-focus-within:text-primary transition-colors">Descripción Operativa</label>
+                        <textarea id="areaDescription" placeholder="DESCRIPCIÓN DE RESPONSABILIDADES..." rows="3"
+                               class="w-full bg-input-bg border-2 border-panel-border rounded-xl px-6 py-4 text-sm font-bold text-input outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/10 transition-all resize-none premium-validate" required data-validation-type="text"></textarea>
+                    </div>
+
+                    <div class="flex items-center px-6 h-14 bg-surface-container/20 border border-panel-border rounded-2xl justify-between">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-black text-label/40 uppercase tracking-widest">Estado Inicial</span>
+                            <span id="areaStatusLabel" class="text-xs font-black text-primary uppercase">Activo</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="areaStatus" checked class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- STEP 2: DESIGN (ICONS & COLORS) -->
+                <div id="stepSection2" class="step-section hidden space-y-6">
+                    <div class="space-y-3">
+                        <label class="text-[11px] font-black text-label/40 uppercase tracking-widest ml-1">Seleccionar Iconografía</label>
+                        <div id="iconGrid" class="grid grid-cols-10 gap-0 border border-panel-border rounded-xl overflow-hidden bg-surface-container/10">
+                            <!-- JS Render Icons -->
+                        </div>
+                        <input type="hidden" id="areaIcon" value="box">
+                    </div>
+                    <div class="space-y-3">
+                        <label class="text-[11px] font-black text-label/40 uppercase tracking-widest ml-1">Identidad Visual (Color)</label>
+                        <div id="colorGrid" class="grid grid-cols-10 gap-0 border border-panel-border rounded-xl overflow-hidden">
+                            <!-- JS Render Colors -->
+                        </div>
+                        <input type="hidden" id="areaColor" value="#6366f1">
+                    </div>
+                </div>
+
+                <!-- STEP 3: USERS (PICKLIST) -->
+                <div id="stepSection3" class="step-section hidden">
+                    <div class="picklist-modern-container flex gap-4 h-[380px]">
+                        <!-- Available -->
+                        <div class="flex-1 flex flex-col border border-panel-border rounded-2xl overflow-hidden bg-surface-container/10">
+                            <div class="bg-surface-container/30 px-4 py-2 border-b border-panel-border flex items-center justify-between">
+                                <span class="text-[10px] font-black text-label/60 uppercase">Disponibles</span>
+                                <i class="fas fa-users text-xs text-label/30"></i>
+                            </div>
+                            <div id="availableUsersList" class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
+                                <!-- JS -->
+                            </div>
+                        </div>
+                        
+                        <!-- Divider -->
+                        <div class="flex flex-col justify-center items-center gap-2">
+                            <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs shadow-sm">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                        </div>
+
+                        <!-- Selected -->
+                        <div class="flex-1 flex flex-col border border-primary/20 rounded-2xl overflow-hidden bg-primary/5">
+                            <div class="bg-primary/10 px-4 py-2 border-b border-primary/20 flex items-center justify-between">
+                                <span class="text-[10px] font-black text-primary uppercase">Asignados</span>
+                                <i class="fas fa-check-circle text-xs text-primary/60"></i>
+                            </div>
+                            <div id="selectedUsersList" class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
+                                <!-- JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="modal-footer">
+                <div class="footer-left">
+                    <!-- Cancelar (Solo Paso 1) -->
+                    <button type="button" id="btnCancelArea" onclick="closeAreaModal()" class="nexus-btn nexus-btn-secondary">
+                        Cancelar
+                    </button>
+                    <!-- Anterior (Paso 2 y 3) -->
+                    <button type="button" id="btnPrevStep" onclick="changeStep(currentStep - 1)" class="nexus-btn nexus-btn-secondary hidden">
+                        <i class="fas fa-chevron-left"></i>
+                        <span>Anterior</span>
+                    </button>
+                </div>
+                <div class="footer-right">
+                    <!-- Acción Principal -->
+                    <button type="button" id="btnNextStep" onclick="changeStep(currentStep + 1)" class="nexus-btn nexus-btn-primary">
+                        <span>Continuar</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button type="button" id="btnSaveArea" onclick="saveArea()" class="nexus-btn nexus-btn-success hidden">
+                        <i class="fas fa-save"></i>
+                        <span>Finalizar</span>
+                    </button>
+                </div>
+            </footer>
+        </form>
+    </div>
+</div>
+
+<div id="editAreaModal" class="nexus-modal hidden fixed inset-0 z-[110] items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="nexus-modal-content w-full max-w-2xl bg-panel-fill border border-panel-border rounded-xl shadow-2xl overflow-hidden shadow-black/50 ring-1 ring-white/10">
+        <form id="editAreaForm" class="flex flex-col h-full overflow-hidden">
+            <input type="hidden" id="editAreaId">
+            <div class="p-6 border-b border-panel-border flex items-center justify-between bg-surface-container/30">
+                <div>
+                    <h3 id="editModalTitle" class="text-xl font-black text-primary uppercase tracking-tighter italic">Modificar Área</h3>
+                    <p class="text-[10px] text-label font-bold uppercase tracking-widest mt-0.5">Gestión Organizacional / Identidad</p>
+                </div>
+                <button type="button" onclick="closeEditAreaModal()" class="p-2 hover:bg-surface-container rounded-xl transition-all"><i class="fas fa-times text-label"></i></button>
+            </div>
+
+            <!-- Pre-Header: Step Indicator -->
+            <div class="px-8 pt-6 pb-2">
+                <div class="flex items-center justify-between relative">
+                    <!-- Progress Line -->
+                    <div class="absolute top-5 left-0 w-full h-0.5 bg-panel-border z-0">
+                        <div id="editStepProgress" class="h-full bg-primary transition-all duration-500" style="width: 0%;"></div>
+                    </div>
+                    
+                    <!-- Step 1 -->
+                    <div class="edit-step-item flex flex-col items-center gap-2 z-10" data-step="1">
+                        <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-black text-sm shadow-lg shadow-primary/20 ring-4 ring-panel-fill transition-all">1</div>
+                        <span class="text-[9px] font-black uppercase tracking-widest text-primary">Datos</span>
+                    </div>
+                    <!-- Step 2 -->
+                    <div class="edit-step-item flex flex-col items-center gap-2 z-10" data-step="2">
+                        <div class="w-10 h-10 rounded-full bg-panel-border text-label/40 flex items-center justify-center font-black text-sm ring-4 ring-panel-fill transition-all">2</div>
+                        <span class="text-[9px] font-black uppercase tracking-widest text-label/40">Imagen</span>
+                    </div>
+                    <!-- Step 3 -->
+                    <div class="edit-step-item flex flex-col items-center gap-2 z-10" data-step="3">
+                        <div class="w-10 h-10 rounded-full bg-panel-border text-label/40 flex items-center justify-center font-black text-sm ring-4 ring-panel-fill transition-all">3</div>
+                        <span class="text-[9px] font-black uppercase tracking-widest text-label/40">Usuarios</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-8 min-h-[480px] overflow-y-auto custom-scrollbar">
+                <!-- STEP 1: BASIC DATA -->
+                <div id="editStepSection1" class="edit-step-section space-y-6">
+                    <div class="space-y-2 group">
+                        <label class="text-[11px] font-black text-label/40 uppercase tracking-widest ml-1 group-focus-within:text-primary transition-colors">Nombre del Área</label>
+                        <input type="text" id="editAreaName" placeholder="EJ: RECURSOS HUMANOS" 
+                               class="w-full h-12 bg-input-bg border-2 border-panel-border rounded-xl px-6 text-sm font-bold text-input outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/10 transition-all premium-validate" required data-validation-type="text">
+                    </div>
+                    <div class="space-y-2 group">
+                        <label class="text-[11px] font-black text-label/40 uppercase tracking-widest ml-1 group-focus-within:text-primary transition-colors">Descripción Operativa</label>
+                        <textarea id="editAreaDescription" placeholder="DESCRIPCIÓN DE RESPONSABILIDADES..." rows="3"
+                               class="w-full bg-input-bg border-2 border-panel-border rounded-xl px-6 py-4 text-sm font-bold text-input outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/10 transition-all resize-none premium-validate" required data-validation-type="text"></textarea>
+                    </div>
+
+                    <div class="flex items-center px-6 h-14 bg-surface-container/20 border border-panel-border rounded-2xl justify-between">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-black text-label/40 uppercase tracking-widest">Estado de Operación</span>
+                            <span id="editAreaStatusLabel" class="text-xs font-black text-primary uppercase">Activo</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="editAreaStatus" checked class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- STEP 2: DESIGN (ICONS & COLORS) -->
+                <div id="editStepSection2" class="edit-step-section hidden space-y-6">
+                    <div class="space-y-3">
+                        <label class="text-[11px] font-black text-label/40 uppercase tracking-widest ml-1">Seleccionar Iconografía</label>
+                        <div id="editIconGrid" class="grid grid-cols-10 gap-0 border border-panel-border rounded-xl overflow-hidden bg-surface-container/10">
+                            <!-- JS Render Icons -->
+                        </div>
+                        <input type="hidden" id="editAreaIcon" value="box">
+                    </div>
+                    <div class="space-y-3">
+                        <label class="text-[11px] font-black text-label/40 uppercase tracking-widest ml-1">Identidad Visual (Color)</label>
+                        <div id="editColorGrid" class="grid grid-cols-10 gap-0 border border-panel-border rounded-xl overflow-hidden">
+                            <!-- JS Render Colors -->
+                        </div>
+                        <input type="hidden" id="editAreaColor" value="#6366f1">
+                    </div>
+                </div>
+
+                <!-- STEP 3: USERS (PICKLIST) -->
+                <div id="editStepSection3" class="edit-step-section hidden">
+                    <div class="picklist-modern-container flex gap-4 h-[380px]">
+                        <!-- Available -->
+                        <div class="flex-1 flex flex-col border border-panel-border rounded-2xl overflow-hidden bg-surface-container/10">
+                            <div class="bg-surface-container/30 px-4 py-2 border-b border-panel-border flex items-center justify-between">
+                                <span class="text-[10px] font-black text-label/60 uppercase">Disponibles</span>
+                                <i class="fas fa-users text-xs text-label/30"></i>
+                            </div>
+                            <div id="editAvailableUsersList" class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
+                                <!-- JS -->
+                            </div>
+                        </div>
+                        
+                        <!-- Divider -->
+                        <div class="flex flex-col justify-center items-center gap-2">
+                            <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs shadow-sm">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                        </div>
+
+                        <!-- Selected -->
+                        <div class="flex-1 flex flex-col border border-primary/20 rounded-2xl overflow-hidden bg-primary/5">
+                            <div class="bg-primary/10 px-4 py-2 border-b border-primary/20 flex items-center justify-between">
+                                <span class="text-[10px] font-black text-primary uppercase">Asignados</span>
+                                <i class="fas fa-check-circle text-xs text-primary/60"></i>
+                            </div>
+                            <div id="editSelectedUsersList" class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
+                                <!-- JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="modal-footer">
+                <div class="footer-left">
+                    <!-- Cancelar (Solo Paso 1) -->
+                    <button type="button" id="btnCancelEditArea" onclick="closeEditAreaModal()" class="nexus-btn nexus-btn-secondary">
+                        Cancelar
+                    </button>
+                    <!-- Anterior (Paso 2 y 3) -->
+                    <button type="button" id="btnEditPrevStep" onclick="changeEditStep(currentEditStep - 1)" class="nexus-btn nexus-btn-secondary hidden">
+                        <i class="fas fa-chevron-left"></i>
+                        <span>Anterior</span>
+                    </button>
+                </div>
+                <div class="footer-right">
+                    <!-- Acción Principal -->
+                    <button type="button" id="btnEditNextStep" onclick="changeEditStep(currentEditStep + 1)" class="nexus-btn nexus-btn-primary">
+                        <span>Continuar</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button type="button" id="btnSaveEditedArea" onclick="saveArea()" class="nexus-btn nexus-btn-success hidden">
+                        <i class="fas fa-save"></i>
+                        <span>Guardar Cambios</span>
+                    </button>
+                </div>
+            </footer>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    const AREAS_DATA = {{ areas_json | tojson | safe }};
+    const ALL_USERS = {{ all_users_json | tojson | safe if all_users_json else '[]' }};
+</script>
+<script src="{{ url_for('core.serve_assets', filename='js/areas.js') }}?v={{ range(1000, 9999) | random }}"></script>
+{% endblock %}

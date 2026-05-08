@@ -1,0 +1,134 @@
+/* === DESIGN SYSTEM: MAIN ARCHITECTURE === */
+
+/* Base transitions for interactive elements */
+a, button, input, svg {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Generic Animations */
+@keyframes dashboardFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: dashboardFadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Glassmorphism Styles */
+.glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* === SIDEBAR COMPONENT — PREMIUM === */
+
+.nav-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    border-radius: 14px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-item:hover {
+    transform: translateX(4px);
+}
+
+.nav-item svg {
+    opacity: 0.6;
+    transition: all 0.25s ease;
+}
+
+.nav-item:hover svg {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.nav-item-active {
+    color: rgb(var(--color-primary)) !important;
+    background: rgb(var(--color-primary) / 0.08) !important;
+    border: 1px solid rgb(var(--color-primary) / 0.2) !important;
+    border-radius: 14px !important;
+    font-weight: 800;
+}
+
+.nav-item-active svg {
+    opacity: 1 !important;
+    color: rgb(var(--color-primary)) !important;
+}
+
+.nav-item-active:hover {
+    transform: none;
+}
+
+/* Active State Indicator — Left bar */
+.nav-item-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 60%;
+    background: rgb(var(--color-primary));
+    border-radius: 0 4px 4px 0;
+    box-shadow: 2px 0 12px rgb(var(--color-primary) / 0.4);
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+
+/* --- COLLAPSED STATE (is-collapsed) --- */
+#sidebar.is-collapsed,
+html.sidebar-is-collapsed #sidebar {
+    width: 64px !important;
+    min-width: 64px !important;
+    max-width: 64px !important;
+    flex-shrink: 0 !important;
+}
+
+html.sidebar-is-collapsed .sidebar-text {
+    display: none !important;
+}
+
+#sidebar.is-collapsed .nav-item,
+html.sidebar-is-collapsed .nav-item {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+#sidebar.is-collapsed .nav-item svg,
+html.sidebar-is-collapsed #sidebar .nav-item svg {
+    width: 26px !important; 
+    height: 26px !important;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#sidebar.is-collapsed .nav-item-active::before,
+html.sidebar-is-collapsed .nav-item-active::before {
+    height: 55%;
+}
+
+/* === SIDEBAR SECTION DIVIDER === */
+/* Hidden by default (expanded), shown via CSS when collapsed — no JS required */
+.sidebar-divider {
+    display: none;
+    border: none;
+    border-top: 1px solid rgba(148, 163, 220, 0.45);
+    margin: 8px 8px;
+}
+
+/* Show dividers only in collapsed state */
+#sidebar.is-collapsed .sidebar-divider,
+html.sidebar-is-collapsed #sidebar .sidebar-divider {
+    display: block !important;
+}

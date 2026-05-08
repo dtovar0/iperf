@@ -1,0 +1,63 @@
+# Nexus Project: iperf
+
+## Módulo General
+
+### Regla: Estructura Nexus
+El proyecto debe seguir la estructura de Nexus Scaffolder v5.1, utilizando Flask con Blueprints.
+
+### Impacto
+Arquitectura del sistema, mantenibilidad.
+
+---
+
+# 📚 MOTOR DE REGLAS DE NEGOCIO — NEXUS PLATFORM
+
+
+## Áreas y Plataformas
+
+### Regla: Integridad Referencial
+No se permite la eliminación de un área si existen plataformas o sistemas vinculados a ella. El sistema debe bloquear la operación y mostrar un error detallado.
+
+### Ejemplo
+Si el área "Infraestructura" tiene vinculada la plataforma "AWS", el administrador recibirá un mensaje: "No se pueden eliminar las siguientes áreas porque tienen plataformas vinculadas: Infraestructura".
+
+### Impacto
+Backend (API de Áreas), UI (Módulo de Áreas).
+
+---
+
+## Seguridad y Autenticación
+
+### Regla: Gestión de Contraseñas Locales
+Los usuarios creados mediante el flujo Local DEBEN tener una contraseña establecida en el momento del registro. Los usuarios LDAP no requieren este campo ya que la autenticación es externa.
+
+### Ejemplo
+Al registrar un usuario local, los campos "Password" y "Confirm Password" son obligatorios y deben coincidir. Al importar de LDAP, estos campos se ocultan automáticamente.
+
+### Impacto
+Frontend (Registration Modal), Backend (User Model).
+
+---
+
+## Interfaz de Usuario (UI)
+
+### Regla: Paginación Maestra
+La paginación en todos los módulos de gestión debe seguir el estándar de Auditoría (DataTables style), mostrando "Mostrando X-Y de Z registros" y controles simplificados.
+
+### Ejemplo
+El módulo de Áreas utiliza `dt-layout-row` para su footer de paginación, logrando paridad 1:1 con Auditoría.
+
+### Impacto
+Módulos de Usuarios, Áreas y Plataformas.
+---
+
+## Gestión de Ciclo de Vida del Sistema
+
+### Regla: Desacoplamiento de Componentes Legados
+Queda terminantemente prohibida la reintroducción de módulos relacionados con PSX5K, Worker Daemons o APIs tácticas v1. El sistema debe operar exclusivamente bajo la arquitectura de portal de gestión de identidades y accesos.
+
+### Ejemplo
+Cualquier intento de crear una ruta `/api/v1` o de importar servicios de ejecución de comandos remotos (SSH/Task Engines) será rechazado en la revisión arquitectónica.
+
+### Impacto
+Arquitectura Global, Documentación Técnica, Estructura de Base de Datos.

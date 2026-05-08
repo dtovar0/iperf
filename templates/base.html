@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Nexus | Premium Dashboard{% endblock %}</title>
+    
+    <!-- Meta SEO -->
+    <meta name="description" content="Dashboard de alta densidad con diseño basado en tokens y arquitectura modular.">
+    <meta name="color-scheme" content="light dark">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script src="{{ url_for('core.serve_assets', filename='js/global.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- Styles -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="{{ url_for('core.serve_assets', filename='js/tailwind-config.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}?v={{ range(1000, 9999) | random }}">
+    <link rel="stylesheet" href="{{ url_for('core.serve_assets', filename='css/global.css') }}?v={{ range(1000, 9999) | random }}">
+    <link rel="stylesheet" href="{{ url_for('core.serve_assets', filename='css/main.css') }}?v={{ range(1000, 9999) | random }}">
+    <link rel="stylesheet" href="{{ url_for('core.serve_assets', filename='css/components.css') }}?v={{ range(1000, 9999) | random }}">
+    {% block extra_css %}{% endblock %}
+    
+    <!-- jQuery & DataTables -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.5/css/dataTables.dataTables.min.css">
+    <script src="https://cdn.datatables.net/2.0.5/js/dataTables.min.js"></script>
+    <script>
+        const CSRF_TOKEN = "{{ csrf_token() }}";
+    </script>
+</head>
+
+<body class="bg-bg text-text overflow-hidden h-full"
+      data-brand-bg="{{ sys_config.bg_color if sys_config else '' }}" 
+      data-brand-text="{{ sys_config.text_color if sys_config else '' }}"
+      data-pref-notifications="{{ 'true' if current_user.pref_notifications else 'false' }}"
+      data-pref-email="{{ 'true' if current_user.pref_email_notifications else 'false' }}"
+      data-pref-refresh="{{ current_user.pref_refresh_interval or 60 }}"
+      data-pref-tour="{{ 'true' if current_user.pref_tour_enabled else 'false' }}">
+    <!-- Root flex container: sidebar + main, fills full viewport height -->
+    <div class="flex overflow-hidden h-full">
+        <!-- Sidebar -->
+        {% include 'components/sidebar.html' %}
+
+        <!-- Main Wrapper -->
+        <div id="mainContent" class="flex-1 flex flex-col min-w-0 bg-bg overflow-hidden">
+            <!-- Topbar -->
+            <header class="h-16 border-b border-panel-border bg-panel-fill/80 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between px-6 transition-colors">
+                <div class="flex items-center gap-4">
+                    <!-- Hamburger Button -->
+                    <button id="sidebarToggle" class="w-10 h-10 flex items-center justify-center hover:bg-surface-container rounded-base transition-colors group">
+                        <svg class="w-6 h-6 text-secondary group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                    <!-- Location / Breadcrumbs -->
+                    <nav id="locationBar" class="flex items-center gap-2 ml-4 brand-text transition-all duration-300 text-sm font-medium">
+                        {% block breadcrumbs %}
+                        <span class="text-secondary">Nexus</span>
+                        <svg class="w-4 h-4 text-label/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        <span class="text-primary">Dashboard</span>
+                        {% endblock %}
+                    </nav>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div class="hidden sm:flex items-center h-12 bg-input-bg px-4 rounded-2xl gap-3 border-2 border-panel-border focus-within:border-input-focus transition-all shadow-sm group">
+                        <svg class="w-4 h-4 text-label/60 group-focus-within:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        <input type="text" id="systemSearch" placeholder="Buscar..." class="bg-transparent border-none focus:ring-0 text-input text-sm font-bold w-64 outline-none placeholder:text-label/50 p-0">
+                    </div>
+
+
+                    <!-- Notifications -->
+                    <div class="relative items-center flex">
+                        <button id="notificationBtn" class="relative w-10 h-10 flex items-center justify-center hover:bg-surface-container rounded-base transition-all group active:scale-95">
+                            <svg class="w-5 h-5 text-secondary group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                            </svg>
+                            <span id="notificationBadge" class="hidden absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 bg-gradient-to-br from-rose-500 to-pink-600 rounded-full border-2 border-bg shadow-[0_0_10px_rgba(244,63,94,0.4)] flex items-center justify-center text-[12px] font-black text-white transition-all duration-300 group-hover:scale-110 active:scale-90 z-10">0</span>
+                        </button>
+
+                        <!-- Notification Dropdown -->
+                        <div id="notificationDropdown" class="absolute right-0 top-full mt-2 w-80 bg-panel-fill/95 backdrop-blur-xl border border-panel-border rounded-2xl shadow-2xl opacity-0 translate-y-4 pointer-events-none transition-all duration-300 z-50 overflow-hidden">
+                            <div class="p-4 border-b border-panel-border flex justify-between items-center bg-surface-container/30">
+                                <h3 class="text-[12px] font-black text-label uppercase tracking-widest text-primary/80">Notificaciones</h3>
+                                <div class="flex items-center gap-3">
+                                    <button onclick="markAllAsRead()" class="text-[12px] font-black text-primary hover:underline uppercase tracking-tighter">Marcar todo</button>
+                                    <div class="w-1 h-1 rounded-full bg-panel-border"></div>
+                                    <button onclick="deleteAllNotifications()" class="text-[12px] font-black text-rose-500/60 hover:text-rose-500 hover:underline uppercase tracking-tighter">Borrar todo</button>
+                                </div>
+                            </div>
+                            <!-- Filter Pills -->
+                            <div class="px-4 py-2 bg-surface-container/10 border-b border-panel-border flex gap-2 overflow-x-auto custom-scrollbar no-scrollbar">
+                                <button data-filter="all" class="notif-filter active px-3 py-1 rounded-full text-[12px] font-black uppercase tracking-tighter transition-all">Todos</button>
+                                <button data-filter="warning" class="notif-filter px-3 py-1 rounded-full text-[12px] font-black uppercase tracking-tighter transition-all opacity-40 hover:opacity-100">Seguridad</button>
+                                <button data-filter="info" class="notif-filter px-3 py-1 rounded-full text-[12px] font-black uppercase tracking-tighter transition-all opacity-40 hover:opacity-100">Sistema</button>
+                                <button data-filter="success" class="notif-filter px-3 py-1 rounded-full text-[12px] font-black uppercase tracking-tighter transition-all opacity-40 hover:opacity-100">Éxito</button>
+                            </div>
+                            <div id="notificationList" class="max-h-[320px] overflow-y-auto custom-scrollbar">
+                                <div class="p-8 text-center opacity-40">
+                                    <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                                    <p class="text-[12px] font-black uppercase tracking-widest">Sin notificaciones</p>
+                                </div>
+                            </div>
+                            <a href="{{ url_for('audit.index') }}" class="p-3 bg-surface-container/30 border-t border-panel-border text-center block text-[12px] font-black text-label uppercase tracking-widest hover:text-primary transition-colors">Ver historial completo</a>
+                        </div>
+                    </div>
+
+                    <!-- Theme Toggle (6 Themes) -->
+                    <button id="themeToggle" class="w-10 h-10 flex items-center justify-center hover:bg-surface-container rounded-base transition-all group relative overflow-hidden active:scale-95" data-nx-tooltip="Cambiar Tema">
+                        <svg class="w-5 h-5 text-label/60 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>
+                    </button>
+
+                    <!-- User Settings -->
+                    <button id="settingsBtn" class="w-10 h-10 flex items-center justify-center hover:bg-surface-container rounded-base transition-all group active:scale-95" data-nx-tooltip="Ajustes de Interfaz">
+                        <svg class="w-5 h-5 text-label/60 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </header>            <!-- Settings Modal -->
+            <div id="settingsModal" class="nexus-modal hidden">
+                <div class="modal-backdrop" onclick="closeModal('settingsModal')"></div>
+                <div class="modal-panel max-w-lg">
+                    <!-- Header -->
+                    <header class="modal-header flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner border border-primary/10">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xs font-black uppercase tracking-widest text-primary italic">Configuración de Interfaz</h3>
+                                <p class="text-[12px] text-label/40 font-bold uppercase tracking-tight">Preferencias y Experiencia de Usuario</p>
+                            </div>
+                        </div>
+                        <button onclick="closeModal('settingsModal')" class="w-8 h-8 rounded-full bg-label/5 text-label/40 hover:text-primary hover:bg-primary/10 transition-all flex items-center justify-center">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </header>
+ 
+                    <!-- Modal Body -->
+                    <div class="modal-body overflow-y-auto custom-scrollbar max-h-[60vh] space-y-6">
+                        <!-- Notification Toggle (Desktop) -->
+                        <div class="flex items-center justify-between p-5 bg-surface-container/20 rounded-2xl border border-panel-border/40 group">
+                            <div>
+                                <h4 class="text-sm font-black text-label uppercase tracking-tight group-focus-within:text-primary transition-colors">Notificaciones de Escritorio</h4>
+                                <p class="text-[11px] text-label/40 font-bold uppercase tracking-tighter mt-1">Alertas de tareas terminadas</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="settingNotifyToggle" class="sr-only peer" {% if current_user.pref_notifications %}checked{% endif %}>
+                                <div class="w-12 h-6 bg-panel-border rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            </label>
+                        </div>
+
+                        <!-- Notification Toggle (Email) -->
+                        <div class="flex items-center justify-between p-5 bg-surface-container/20 rounded-2xl border border-panel-border/40 group">
+                            <div>
+                                <h4 class="text-sm font-black text-label uppercase tracking-tight group-focus-within:text-primary transition-colors">Notificaciones por Correo</h4>
+                                <p class="text-[11px] text-label/40 font-bold uppercase tracking-tighter mt-1">Avisos de inicio, fin y errores</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="settingEmailNotifyToggle" class="sr-only peer" {% if current_user.pref_email_notifications %}checked{% endif %}>
+                                <div class="w-12 h-6 bg-panel-border rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            </label>
+                        </div>
+
+                        <!-- Refresh Interval -->
+                        <div class="p-5 bg-surface-container/20 rounded-2xl border border-panel-border/40 group">
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <h4 class="text-sm font-black text-label uppercase tracking-tight group-focus-within:text-primary transition-colors">Frecuencia de Refresco</h4>
+                                    <p class="text-[11px] text-label/40 font-bold uppercase tracking-tighter mt-1">Actualización automática (segundos)</p>
+                                </div>
+                                <span id="refreshValueDisplay" class="px-3 py-1 bg-primary text-white text-[11px] font-black rounded-lg shadow-lg shadow-primary/20">{{ current_user.pref_refresh_interval or 60 }}s</span>
+                            </div>
+                            <input type="range" id="settingRefreshRange" min="10" max="300" step="10" value="{{ current_user.pref_refresh_interval or 60 }}" class="w-full h-1.5 bg-panel-border rounded-lg appearance-none cursor-pointer accent-primary">
+                        </div>
+                    </div>
+
+                    <!-- Footer Actions -->
+                    <footer class="modal-footer">
+                        <button onclick="closeModal('settingsModal')" class="nexus-btn nexus-btn-secondary flex-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            <span>Cancelar</span>
+                        </button>
+                        <button id="saveSettingsBtn" class="nexus-btn nexus-btn-primary flex-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                            <span>Guardar</span>
+                        </button>
+                    </footer>
+                </div>
+            </div>
+            <!-- Main Content Area -->
+            <main class="flex-1 overflow-hidden min-h-0 flex flex-col">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal: Procesamiento (Global Spinner) -->
+    <div id="processingModal" class="nexus-modal hidden fixed inset-0 z-[150] items-center justify-center bg-slate-900/80 backdrop-blur-md p-4">
+        <div class="w-full max-w-sm bg-panel-fill/95 border border-white/10 rounded-3xl shadow-2xl overflow-hidden p-10 flex flex-col items-center text-center">
+            <div class="relative mb-8">
+                <div class="w-20 h-20 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <i class="fas fa-sync-alt text-primary animate-pulse"></i>
+                </div>
+            </div>
+            <h3 class="text-xl font-black text-primary uppercase tracking-tighter italic mb-2">Sincronizando...</h3>
+            <p id="procMessage" class="text-[10px] text-label/40 font-black uppercase tracking-[0.2em]">Actualizando Ecosistema de Seguridad</p>
+        </div>
+    </div>
+
+    <!-- Modal: Éxito en Gestión (Success HUD Global) -->
+    <div id="successManagementModal" class="nexus-modal group hidden fixed inset-0 z-[300] items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 transition-all duration-500">
+        <div class="nexus-modal-content w-full max-w-md bg-[#0f172a] border-2 border-primary/30 rounded-[2.5rem] shadow-[0_25px_60px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col transform transition-all duration-500 scale-90 opacity-0 group-[.show]:scale-100 group-[.show]:opacity-100">
+            <!-- Icon HUD Header -->
+            <div class="p-10 pb-4 flex flex-col items-center text-center">
+                <div class="w-20 h-20 rounded-3xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-6 shadow-xl shadow-emerald-500/10 ring-1 ring-emerald-500/30 animate-bounce-slow">
+                    <i class="fas fa-check-double text-3xl"></i>
+                </div>
+                <h3 class="text-2xl font-black text-primary uppercase tracking-tighter italic">Cambios Aplicados</h3>
+                <p class="text-[10px] font-black text-label/40 uppercase tracking-[0.3em] mt-2">Sincronización Exitosa</p>
+            </div>
+            
+            <div class="px-10 py-6 text-center">
+                <p id="successModalMessage" class="text-sm text-slate-300 font-bold leading-relaxed italic">
+                    La configuración del ecosistema ha sido actualizada con los nuevos parámetros de seguridad.
+                </p>
+            </div>
+
+            <div class="p-10 pt-4">
+                <button onclick="location.reload()" class="w-full h-14 rounded-2xl bg-primary text-white font-black text-[12px] uppercase tracking-[0.2em] shadow-xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4">
+                    <span>Entendido</span>
+                    <span id="successCountdownText" class="opacity-50">(3s)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Globales -->
+    <script src="{{ url_for('core.serve_assets', filename='js/interface-settings.js') }}"></script>
+    <script src="{{ url_for('core.serve_assets', filename='js/platform-tour.js') }}?v={{ range(1000, 9999) | random }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

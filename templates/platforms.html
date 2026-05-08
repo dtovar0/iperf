@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+
+{% block title %}Plataformas | Nexus Premium{% endblock %}
+
+{% block breadcrumbs %}
+<span class="text-secondary cursor-pointer hover:text-primary transition-colors" onclick="window.location.href='/'">Inicio</span>
+<svg class="w-4 h-4 text-label/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+<span class="text-primary font-bold">Plataformas</span>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('core.serve_assets', filename='css/platforms.css') }}?v={{ range(1000, 9999) | random }}">
+<link rel="stylesheet" href="{{ url_for('core.serve_assets', filename='css/portal.css') }}?v={{ range(1000, 9999) | random }}">
+<style>
+    /* Nexus Integration Fixes */
+    .drill-down-view.d-none { display: none !important; }
+    .area-catalog-view.d-none { display: none !important; }
+    
+    /* Ensure scrollability within the Nexus main container */
+    #gridView, #drillDownView {
+        height: 100%;
+        overflow-y: auto;
+        padding: 1.5rem;
+        scrollbar-width: thin;
+    }
+    .modern-table tbody tr.odd { background-color: var(--color-surface-container); }
+    .modern-table tbody tr:hover { background-color: var(--color-panel-border); }
+    .modern-table tbody tr.even { background-color: rgba(248, 250, 252, 0.8); }
+    .modern-table tbody tr:hover { background-color: rgba(99, 102, 241, 0.05); }
+    
+    /* Full Height fix for DataTables 2.0 */
+    .dt-container {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+        min-height: 0;
+    }
+    
+    .dt-layout-row.dt-layout-table {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .dt-layout-row.dt-layout-table > div {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .dt-layout-row:last-child {
+        margin-top: auto !important;
+        padding: 1rem 2rem !important;
+        background: var(--color-bg);
+        border-top: 1px solid var(--color-panel-border);
+    }
+
+    /* Remove standard DataTables padding */
+    .dt-layout-cell {
+        padding: 0 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="h-full flex flex-col overflow-hidden">
+    <!-- CATÁLOGO PRINCIPAL (Portal Style) -->
+    <div id="gridView" class="flex-1 flex flex-col overflow-hidden animate-in fade-in duration-500 portal-entry">
+        <!-- HERO HEADER (Copiado de portal.html) -->
+        <div class="portal-hero flex-shrink-0 relative overflow-hidden">
+            <div class="portal-hero-glow"></div>
+            <div class="portal-hero-grid"></div>
+            <div class="portal-hero-bottom-line"></div>
+
+            <div class="relative z-10 px-8 pt-6 pb-4 flex items-center justify-between gap-6">
+                <!-- Buscador (Izquierda) -->
+                <div class="w-[300px] relative group">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-[11px] text-label/30 group-focus-within:text-primary transition-colors z-10 pointer-events-none"></i>
+                    <input type="text" id="platformSearch" placeholder="Buscar área..."
+                           class="w-full bg-surface-container/50 border border-panel-border rounded-xl pl-10 pr-4 py-3 text-sm font-bold outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-inner" autocomplete="off">
+                </div>
+
+                <!-- KPI Card (Icono + Datos) -->
+                <div class="w-[160px] px-4 py-3 bg-surface-container/30 border border-panel-border rounded-xl flex items-center gap-4 ml-auto shadow-sm">
+                    <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs flex-shrink-0">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <div class="flex flex-col items-center flex-1">
+                        <span id="totalPlatformsCount" class="text-xl font-black text-primary leading-none">—</span>
+                        <span class="text-[9px] font-bold text-label/40 uppercase tracking-widest mt-1">Áreas</span>
+                    </div>
+                </div>
+            </div>
+            <div class="portal-hero-bottom-line"></div>
+        </div>
+
+        <!-- GRID DE PLATAFORMAS (Portal Layout) -->
+        <main class="flex-1 overflow-hidden px-8 py-6">
+            <div id="platformGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 gap-6 h-full">
+                <!-- Inyección dinámica con Tailwind en platforms.js -->
+            </div>
+            
+            <div id="emptyState" class="hidden flex-col items-center justify-center py-32 text-center">
+                <div class="w-16 h-16 rounded-2xl bg-surface-container border border-panel-border flex items-center justify-center text-label/20 mb-4">
+                    <i class="fas fa-search text-2xl"></i>
+                </div>
+                <p class="text-sm font-black text-label/30 uppercase tracking-widest">Sin resultados</p>
+                <p class="text-[11px] text-label/20 font-medium">No se encontraron plataformas bajo este criterio</p>
+            </div>
+        </main>
+
+        <!-- FOOTER PAGINACIÓN (Portal 1:1) -->
+        <footer class="portal-footer flex-shrink-0 flex flex-col sm:flex-row items-center justify-between px-8 py-4 sm:py-3 bg-panel-header/20 border-t border-panel-border gap-4 sm:gap-0">
+            <div class="flex items-center gap-2">
+                <span class="text-[10px] font-black text-label/30 uppercase tracking-widest">Mostrando</span>
+                <span id="itemsShown" class="text-[11px] font-black text-primary">0</span>
+                <span class="text-[10px] font-black text-label/20">—</span>
+                <span id="totalItemsCount" class="text-[11px] font-black text-primary">0</span>
+                <span class="text-[10px] font-black text-label/30 uppercase tracking-widest ml-1">áreas</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="prevPageBtn" class="portal-page-btn" title="Anterior" disabled>
+                    <i class="fas fa-chevron-left text-[9px]"></i>
+                </button>
+                <div class="portal-page-indicator">
+                    <span id="currentPageNum" class="text-[10px] font-black text-label/50">1</span>
+                    <span class="text-[8px] text-label/20 mx-1">/</span>
+                    <span id="totalPagesNum" class="text-[10px] font-black text-label/30">1</span>
+                </div>
+                <button id="nextPageBtn" class="portal-page-btn" title="Siguiente">
+                    <i class="fas fa-chevron-right text-[9px]"></i>
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Drill-down View Layer (Enterprise Style - Absolute Full Height) -->
+    <div id="drillDownView" class="hidden flex-1 flex flex-col p-0 m-0 animate-in slide-in-from-bottom-4 duration-500">
+        <div class="flex-1 bg-panel-fill border border-panel-border rounded-xl flex flex-col overflow-hidden">
+            <!-- Toolbar Integrada: Buscador + Botones -->
+            <div class="px-6 py-5 flex items-center justify-between gap-6 border-b border-panel-border/30 bg-panel-header/20">
+                <div class="flex-1 relative group max-w-xl">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-label/30 group-focus-within:text-primary transition-colors"></i>
+                    <input type="text" placeholder="Filtrar servicios digitales por nombre, estado o descripción..." id="platformSearchSub" 
+                           class="w-full h-12 bg-input-bg border-2 border-panel-border/50 rounded-xl pl-10 pr-4 text-sm font-bold text-label outline-none focus:border-input-focus focus:ring-4 focus:ring-primary/10 transition-all">
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <button class="nexus-btn nexus-btn-secondary" id="btnEditPlatform" data-action="platforms-edit-selected" disabled>
+                        <i class="fas fa-edit"></i>
+                        <span>Modificar</span>
+                    </button>
+                    <button class="nexus-btn nexus-btn-error" id="btnDeletePlatform" data-action="platforms-delete-selected" disabled>
+                        <i class="fas fa-trash-alt"></i>
+                        <span>Eliminar</span>
+                    </button>
+                    <div class="w-px h-8 bg-panel-border mx-2"></div>
+                    <button class="nexus-btn nexus-btn-primary" data-action="platforms-open-create-modal">
+                        <i class="fas fa-plus"></i>
+                        <span>Plataforma</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Container: Zebra Striped & High Fidelity -->
+            <div class="flex-1 overflow-hidden flex flex-col">
+                <div class="flex-1 overflow-x-auto custom-scrollbar px-2">
+                    <table class="modern-table w-full" id="modern-table">
+                        <thead>
+                            <tr class="text-label border-b border-panel-border">
+                                <th class="w-[50px] py-4 bg-surface-container/80 text-center">
+                                    <input type="checkbox" id="selectAllPlatforms" class="w-4 h-4 rounded border-panel-border bg-panel-fill text-primary cursor-pointer mx-auto">
+                                </th>
+                                <th class="w-[80px] text-[11px] font-black uppercase tracking-widest py-4 bg-surface-container/80 text-center">Icono</th>
+                                <th class="w-[20%] text-[11px] font-black uppercase tracking-widest py-4 bg-surface-container/80 text-left">Servicio Digital</th>
+                                <th class="w-[15%] text-[11px] font-black uppercase tracking-widest py-4 bg-surface-container/80 text-left">Enlace Directo</th>
+                                <th class="w-[35%] text-[11px] font-black uppercase tracking-widest py-4 bg-surface-container/80 text-left">Descripción</th>
+                                <th class="w-[100px] text-[11px] font-black uppercase tracking-widest py-4 bg-surface-container/80 text-center">Usuarios</th>
+                                <th class="w-[120px] text-[11px] font-black uppercase tracking-widest py-4 bg-surface-container/80 text-center">Estado</th>
+                                <th class="w-[100px] text-[11px] font-black uppercase tracking-widest py-4 bg-surface-container/80 text-center">Actividad</th>
+                            </tr>
+                        </thead>
+                        <tbody id="drillDownTableBody" class="divide-y divide-panel-border/20">
+                            <!-- DataTables Logic with Zebra Striping -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Registro de Plataforma (Wizard 1:1) -->
+<div class="nexus-modal hidden fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" id="platformModal" role="dialog" aria-modal="true">
+    <div class="nexus-modal-content w-full max-w-2xl max-h-[90vh] bg-panel-fill border border-panel-border rounded-xl shadow-2xl overflow-hidden shadow-black/50 flex flex-col">
+        <div class="modal-header border-b border-panel-border p-8 flex items-center justify-between bg-surface-container/30">
+            <div>
+                <h3 id="platformModalTitle" class="text-2xl font-black text-primary uppercase tracking-tighter italic">Registrar Plataforma</h3>
+                <p class="text-xs text-label/60 font-bold uppercase tracking-widest mt-1">Ecosistema Digital / Gestión de Accesos</p>
+            </div>
+            <button type="button" class="p-3 hover:bg-surface-container rounded-2xl transition-all" data-action="platforms-close-modal">
+                <i class="fas fa-times text-xl text-label/40"></i>
+            </button>
+        </div>
+
+        <div class="px-8 pt-8 pb-0">
+            <div class="step-indicator mb-4 px-2">
+                <div class="flex items-center justify-between relative">
+                    <!-- Progress Line -->
+                    <div class="absolute top-5 left-0 w-full h-0.5 bg-panel-border z-0">
+                        <div id="stepProgress" class="h-full bg-emerald-500 transition-all duration-500" style="width: 0%;"></div>
+                    </div>
+                    
+                    <!-- Step 1 -->
+                    <div class="step-item flex flex-col items-center gap-2 z-10" data-step="1">
+                        <div id="stepCircle1" class="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-sm shadow-lg shadow-emerald-500/20 ring-4 ring-white transition-all">1</div>
+                        <span id="stepLabel1" class="text-[9px] font-black uppercase tracking-widest text-emerald-500">Datos</span>
+                    </div>
+                    <!-- Step 2 -->
+                    <div class="step-item flex flex-col items-center gap-2 z-10" data-step="2">
+                        <div id="stepCircle2" class="w-10 h-10 rounded-full bg-panel-border text-label/40 flex items-center justify-center font-black text-sm ring-4 ring-white transition-all">2</div>
+                        <span id="stepLabel2" class="text-[9px] font-black uppercase tracking-widest text-label/40">Imagen</span>
+                    </div>
+                    <!-- Step 3 -->
+                    <div class="step-item flex flex-col items-center gap-2 z-10" data-step="3">
+                        <div id="stepCircle3" class="w-10 h-10 rounded-full bg-panel-border text-label/40 flex items-center justify-center font-black text-sm ring-4 ring-white transition-all">3</div>
+                        <span id="stepLabel3" class="text-[9px] font-black uppercase tracking-widest text-label/40">Usuarios</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto custom-scrollbar px-8 pt-4 pb-4">
+            <form id="createPlatformForm" data-action-submit="platform-save" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <!-- Step 1: Datos -->
+                <div id="step1" class="modal-step active space-y-6">
+                    <div class="space-y-4">
+                        <div class="space-y-2 group">
+                            <label class="text-[10px] font-black text-primary uppercase tracking-widest ml-1 opacity-60 group-focus-within:opacity-100 transition-opacity">Nombre del Servicio</label>
+                            <input type="text" name="name" required placeholder="E.J. FIGMA, AWS, SAP..." 
+                                   class="w-full bg-input-bg border-2 border-panel-border rounded-2xl px-5 py-4 text-sm font-bold text-input outline-none focus:border-input-focus focus:ring-4 focus:ring-primary/10 transition-all">
+                        </div>
+                        <div class="space-y-2 group">
+                            <label class="text-[10px] font-black text-primary uppercase tracking-widest ml-1 opacity-60 group-focus-within:opacity-100 transition-opacity">Área / Departamento</label>
+                            <select name="area_id" id="modalAreaSelect" required
+                                    class="w-full bg-input-bg border-2 border-panel-border rounded-2xl px-5 py-4 text-sm font-bold text-input outline-none focus:border-input-focus focus:ring-4 focus:ring-primary/10 transition-all appearance-none cursor-pointer">
+                                <option value="" disabled selected>Seleccione un área...</option>
+                                <!-- Dinámico -->
+                            </select>
+                        </div>
+                        
+                        <div class="space-y-2 group">
+                            <label class="text-[10px] font-black text-primary uppercase tracking-widest ml-1 opacity-60 group-focus-within:opacity-100 transition-opacity">Descripción Funcional</label>
+                            <textarea name="description" rows="3" required placeholder="Describa el propósito de esta herramienta en la organización..." 
+                                      class="w-full bg-input-bg border-2 border-panel-border rounded-2xl px-5 py-4 text-sm font-bold text-input outline-none focus:border-input-focus focus:ring-4 focus:ring-primary/10 transition-all resize-none"></textarea>
+                        </div>
+
+                        <div class="space-y-2 group">
+                            <label class="text-[10px] font-black text-primary uppercase tracking-widest ml-1 opacity-60 group-focus-within:opacity-100 transition-opacity">URL de Acceso Directo</label>
+                            <div class="relative">
+                                <i class="fas fa-link absolute left-5 top-1/2 -translate-y-1/2 text-label/40"></i>
+                                <input type="url" name="direct_link" id="directLinkInput" required placeholder="https://plataforma.empresa.com" 
+                                       class="w-full bg-input-bg border-2 border-panel-border rounded-2xl pl-12 pr-5 py-4 text-sm font-bold text-input outline-none focus:border-input-focus focus:ring-4 focus:ring-primary/10 transition-all">
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 group">
+                            <label class="text-[10px] font-black text-primary uppercase tracking-widest ml-1 opacity-60">Estado Operativo</label>
+                            <div class="flex items-center px-6 h-14 bg-surface-container/20 border-2 border-panel-border rounded-2xl justify-between transition-all group-focus-within:border-primary/40">
+                                <span id="platformStatusLabel" class="text-xs font-black text-emerald-500 uppercase">Activo / Disponible</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="platformStatusToggle" checked class="sr-only peer">
+                                    <div class="w-10 h-5 bg-slate-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Identidad Visual -->
+                <div id="step2" class="modal-step hidden space-y-4">
+                    <div class="flex flex-col gap-4">
+                        <div class="flex p-1 bg-surface-container/30 border border-panel-border rounded-xl">
+                            <button type="button" class="flex-1 px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all bg-white shadow-sm text-primary" id="btnModeImage" data-action="platforms-visual-mode" data-mode="image">Logo</button>
+                            <button type="button" class="flex-1 px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all text-label/40 hover:text-label" id="btnModeIcon" data-action="platforms-visual-mode" data-mode="icon">Icono</button>
+                        </div>
+
+                        <div class="min-h-[180px] relative border-2 border-dashed border-panel-border rounded-2xl overflow-hidden transition-all" id="visualSelectorContainer">
+                            <input type="hidden" name="icon" id="selectedIconInput" value="box">
+                            <!-- Upload Logo -->
+                            <div id="logoUploadZone" class="w-full h-[180px] flex flex-col items-center justify-center space-y-3">
+                                <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                                    <i class="fas fa-cloud-upload-alt text-2xl text-primary"></i>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-sm font-black text-label">Logo de Plataforma</p>
+                                    <p class="text-[10px] font-bold text-label/40 uppercase tracking-widest">PNG, SVG (Máx 2MB)</p>
+                                </div>
+                                <input type="file" name="logo" id="logoInput" class="hidden" accept="image/*">
+                                <button type="button" onclick="document.getElementById('logoInput').click()" class="px-6 py-2 rounded-xl bg-surface-container text-label font-black text-[10px] hover:bg-panel-border transition-all uppercase tracking-tighter">Seleccionar Imagen</button>
+                            </div>
+                            <div id="iconSelectorZone" class="hidden w-full grid grid-cols-10 gap-0 max-h-[180px] overflow-y-auto custom-scrollbar"></div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-label/40 uppercase tracking-widest">Color de Texto</label>
+                                <div class="flex items-center gap-3 p-3 bg-surface-container/20 border-2 border-panel-border rounded-2xl opacity-40 transition-opacity" id="textColorControl">
+                                <div class="flex items-center gap-3 p-3 bg-surface-container/20 border-2 border-panel-border rounded-xl opacity-40 transition-opacity" id="textColorControl">
+                                    <input type="color" name="text_color" id="textColorInput" value="#ffffff" disabled class="w-8 h-8 rounded-lg cursor-pointer bg-transparent js-sync-preview" data-target="icon">
+                                    <input type="text" id="textColorText" value="#FFFFFF" disabled class="bg-transparent border-none text-xs font-black text-label w-full focus:ring-0 uppercase">
+                                </div>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-label/40 uppercase tracking-widest">Color de Fondo</label>
+                                <div class="flex items-center gap-3 p-3 bg-surface-container/20 border-2 border-panel-border rounded-xl opacity-40 transition-opacity" id="bgColorControl">
+                                    <input type="color" name="bg_color" id="bgColorInput" value="#000000" disabled class="w-8 h-8 rounded-lg cursor-pointer bg-transparent js-sync-preview" data-target="bg">
+                                    <input type="text" id="bgColorText" value="#000000" disabled class="bg-transparent border-none text-xs font-black text-label w-full focus:ring-0 uppercase">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Usuarios -->
+                <div id="step3" class="modal-step hidden space-y-4">
+                    <div class="grid grid-cols-2 gap-4 h-[350px]">
+                        <div class="flex flex-col rounded-xl border border-panel-border bg-surface-container/20 overflow-hidden">
+                            <div class="p-3 bg-surface-container/50 border-b border-panel-border flex flex-col gap-2">
+                                <span class="text-[10px] font-black text-label/40 uppercase tracking-widest">Disponibles</span>
+                                <div class="relative">
+                                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-label/30 text-[10px]"></i>
+                                    <input type="text" placeholder="Buscar usuario..." class="w-full bg-white/50 border border-panel-border rounded-xl pl-8 pr-3 py-1.5 text-[10px] font-bold outline-none focus:border-primary/40 js-picklist-filter" data-list-id="availableList">
+                                </div>
+                            </div>
+                            <div id="availableList" class="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar"></div>
+                        </div>
+                        <div class="flex flex-col rounded-xl border border-primary/20 bg-primary/5 overflow-hidden">
+                            <div class="p-3 bg-primary/10 border-b border-primary/10 flex flex-col gap-2">
+                                <span class="text-[10px] font-black text-primary uppercase tracking-widest">Asignados</span>
+                                <div class="relative">
+                                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-primary/30 text-[10px]"></i>
+                                    <input type="text" placeholder="Buscar asignado..." class="w-full bg-white border border-primary/10 rounded-xl pl-8 pr-3 py-1.5 text-[10px] font-bold outline-none focus:border-primary/40 js-picklist-filter" data-list-id="assignedList">
+                                </div>
+                            </div>
+                            <div id="assignedList" class="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar"></div>
+                        </div>
+                    </div>
+                    <input type="hidden" name="users" id="selectedUsersInput">
+                </div>
+            </form>
+        </div>
+
+        <!-- Modal Footer (Premium Layout) -->
+        <div class="modal-footer border-t border-panel-border px-8 py-6 flex items-center justify-between bg-surface-container/30">
+            <!-- Izquierda: Botones de Salida / Retroceso -->
+            <div class="flex-1 flex justify-start gap-3">
+                <button type="button" id="btnCancel" data-action="platforms-close-modal" 
+                        class="h-12 min-w-[180px] px-8 rounded-xl bg-slate-100 text-slate-600 font-black text-[12px] uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95 flex items-center justify-center">
+                    Cancelar
+                </button>
+                <button type="button" id="btnBack" data-action="platforms-step-back" 
+                        class="h-12 min-w-[180px] px-8 rounded-xl bg-slate-100 text-slate-600 font-black text-[12px] uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95 flex items-center justify-center hidden">
+                    Anterior
+                </button>
+            </div>
+
+            <!-- Derecha: Botones de Avance -->
+            <div class="flex-1 flex justify-end gap-3">
+                <button type="button" id="btnNext" data-action="platforms-step-next" 
+                        class="h-12 min-w-[180px] px-8 rounded-xl bg-emerald-500 text-white font-black text-[12px] uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3">
+                    <span>Continuar</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+
+                <button type="submit" id="btnSubmit" form="createPlatformForm" 
+                        class="h-12 min-w-[180px] px-8 rounded-xl bg-emerald-500 text-white font-black text-[12px] uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all hidden flex items-center justify-center gap-3">
+                    <span>Finalizar</span>
+                    <i class="fas fa-check-circle"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+    // Hybrid Data Bridge for Legacy 1:1 Implementation
+    window.__platformData = {{ grouped_platforms|tojson | safe }};
+    window.__areaData = {{ area_list|tojson | safe }};
+    window.__allUsers = {{ all_users|tojson | safe }};
+    window.__urls = { index: "{{ url_for('platforms_module.platforms_list') }}" };
+    
+    // Global references for platforms.js
+    const platformData = window.__platformData;
+    const areaData = window.__areaData;
+    const allUsers = window.__allUsers;
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("DOM Ready - Forcing Catalog Render");
+        if (typeof renderPlatformGrid === 'function') {
+            renderPlatformGrid();
+        } else {
+            setTimeout(() => {
+                if (typeof renderPlatformGrid === 'function') renderPlatformGrid();
+            }, 500);
+        }
+    });
+</script>
+<script src="{{ url_for('core.serve_assets', filename='js/platforms.js') }}?v={{ range(1000, 9999) | random }}"></script>
+{% endblock %}

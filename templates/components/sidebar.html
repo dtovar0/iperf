@@ -1,0 +1,153 @@
+<aside id="sidebar" class="flex-shrink-0 w-64 bg-panel-fill border-r border-panel-border transition-all duration-300 fixed inset-y-0 left-0 z-40 -translate-x-full lg:relative lg:translate-x-0" style="height:100dvh;">
+    <div class="h-full flex flex-col">
+        <!-- Brand / Logo -->
+        <div class="h-16 px-6 border-b border-panel-border flex items-center justify-between mb-4 flex-shrink-0">
+            <div class="flex items-center gap-3 brand-text overflow-hidden transition-all duration-300">
+                {% if sys_config and sys_config.portal_identity_type == 'image' and sys_config.portal_icon %}
+                    <div class="w-9 h-9 flex-shrink-0 rounded-xl overflow-hidden flex items-center justify-center shadow-lg shadow-primary/30 ring-2 ring-primary/20">
+                        <img src="{{ sys_config.portal_icon }}" alt="Logo" class="w-full h-full object-cover">
+                    </div>
+                {% elif sys_config and sys_config.portal_icon %}
+                    <div class="w-9 h-9 flex-shrink-0 rounded-xl flex items-center justify-center shadow-lg shadow-primary/30 ring-2 ring-primary/20" 
+                         style="background-color: var(--color-brand-identity-bg, rgb(var(--color-primary))); color: var(--color-brand-identity-text, white);">
+                        {{ sys_config.portal_icon | safe }}
+                    </div>
+                {% else %}
+                    <div class="w-9 h-9 flex-shrink-0 rounded-xl flex items-center justify-center shadow-lg shadow-primary/30 ring-2 ring-primary/20"
+                         style="background-color: var(--color-brand-identity-bg, rgb(var(--color-primary))); color: var(--color-brand-identity-text, white);">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                {% endif %}
+                <span class="sidebar-text text-lg font-black tracking-tighter whitespace-nowrap uppercase text-body-text">
+                    {{ (sys_config.portal_name if sys_config and sys_config.portal_name else 'NEXUS') }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-grow space-y-1 overflow-x-hidden px-3">
+            <p class="text-[12px] font-black text-label/40 uppercase tracking-[0.2em] px-3 mb-2 sidebar-text">Inicio</p>
+            <hr class="sidebar-divider">
+
+            {% if current_user.role == 'administrador' %}
+            <a href="{{ url_for('core.index') }}" title="Control Global" data-nx-tooltip="Dashboard de Gestión"
+               class="nav-item {% if request.endpoint == 'core.index' %}nav-item-active{% endif %} gap-4 px-4 py-3 text-label hover:text-primary hover:bg-primary/5 transition-all group">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                <span class="sidebar-text text-sm font-bold whitespace-nowrap">Dashboard Control</span>
+            </a>
+
+            <a href="{{ url_for('catalogo.index') }}" title="Portal de Catálogo" data-nx-tooltip="Vista del Usuario"
+               class="nav-item {% if request.endpoint == 'catalogo.index' %}nav-item-active{% endif %} gap-4 px-4 py-3 text-label hover:text-primary hover:bg-primary/5 transition-all group">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
+                <span class="sidebar-text text-sm font-bold whitespace-nowrap">Catálogo</span>
+            </a>
+
+            {% else %}
+            <a href="{{ url_for('core.index') }}" title="Dashboard" data-nx-tooltip="Dashboard"
+               class="nav-item {% if request.endpoint == 'core.index' %}nav-item-active{% endif %} gap-4 px-4 py-3 text-label hover:text-primary hover:bg-primary/5 transition-all group">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                <span class="sidebar-text text-sm font-bold whitespace-nowrap">Dashboard</span>
+            </a>
+            {% endif %}
+
+            <a href="{{ url_for('platforms_module.platforms_list') }}" title="Plataformas" data-nx-tooltip="Plataformas"
+               class="nav-item {% if request.endpoint == 'platforms_module.platforms_list' %}nav-item-active{% endif %} gap-4 px-4 py-3 text-label hover:text-primary hover:bg-primary/5 transition-all group">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
+                <span class="sidebar-text text-sm font-bold whitespace-nowrap">Plataformas</span>
+            </a>
+
+            <a href="{{ url_for('drive_platforms.index') }}" title="Unidades de Drive" data-nx-tooltip="Unidades de Drive"
+               class="nav-item {% if request.endpoint == 'drive_platforms.index' %}nav-item-active{% endif %} gap-4 px-4 py-3 text-label hover:text-primary hover:bg-primary/5 transition-all group">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M15 16h.01"></path></svg>
+                <span class="sidebar-text text-sm font-bold whitespace-nowrap">Unidades de Drive</span>
+            </a>
+ 
+            <a href="{{ url_for('requests_module.requests_list') }}" title="Solicitudes" data-nx-tooltip="Solicitudes"
+               class="nav-item {% if request.endpoint == 'requests_module.requests_list' %}nav-item-active{% endif %} gap-4 px-4 py-3 text-label hover:text-primary hover:bg-primary/5 transition-all group">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                <span class="sidebar-text text-sm font-bold whitespace-nowrap">Solicitudes</span>
+            </a>
+
+            <a href="{{ url_for('drive.index') }}" title="Nexus Drive" data-nx-tooltip="Gestión de Archivos"
+               class="nav-item {% if request.endpoint == 'drive.index' %}nav-item-active{% endif %} gap-4 px-4 py-3 text-label hover:text-primary hover:bg-primary/5 transition-all group">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
+                <span class="sidebar-text text-sm font-bold whitespace-nowrap">Nexus Drive</span>
+            </a>
+
+            <p class="text-[12px] font-black text-label/40 uppercase tracking-[0.2em] px-3 mb-2 mt-8 sidebar-text">Operaciones</p>
+            <hr class="sidebar-divider">
+
+            <a href="{{ url_for('areas_module.areas_list') }}" title="Áreas" data-nx-tooltip="Áreas"
+               class="nav-item {% if request.endpoint == 'areas_module.areas_list' %}nav-item-active{% endif %} gap-4 px-4 py-3 text-label hover:text-primary hover:bg-primary/5 transition-all group">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                <span class="sidebar-text text-sm font-bold whitespace-nowrap">Áreas</span>
+            </a>
+
+
+
+            <!-- Administrators Section -->
+            {% if current_user.role == 'administrador' %}
+            <a href="{{ url_for('users_module.users_list') }}" title="Usuarios" data-nx-tooltip="Directorio de Usuarios"
+               class="nav-item {% if request.endpoint == 'users_module.users_list' %}nav-item-active{% endif %} gap-4 px-4 py-3 text-label hover:text-primary hover:bg-primary/5 transition-all group">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <span class="sidebar-text text-sm font-bold whitespace-nowrap">Usuarios</span>
+            </a>
+
+            <p class="text-[12px] font-black text-label/40 uppercase tracking-[0.2em] px-3 mb-2 mt-8 sidebar-text">Configuración</p>
+            <hr class="sidebar-divider">
+            
+            <a href="{{ url_for('settings.index') }}" title="Ajustes" data-nx-tooltip="Ajustes"
+               class="nav-item {% if request.endpoint == 'settings.index' %}nav-item-active{% endif %} gap-4 px-4 py-3 text-label hover:text-primary hover:bg-primary/5 transition-all group">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"></path></svg>
+                <span class="sidebar-text text-sm font-bold whitespace-nowrap">Ajustes</span>
+            </a>
+
+            <a href="{{ url_for('auth.index') }}" title="Autenticación" data-nx-tooltip="Parámetros de Auth / LDAP"
+               class="nav-item {% if request.endpoint == 'auth.index' %}nav-item-active{% endif %} gap-4 px-4 py-3 text-label hover:text-primary hover:bg-primary/5 transition-all group">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                <span class="sidebar-text text-sm font-bold whitespace-nowrap">Autenticación</span>
+            </a>
+
+
+
+            <a href="{{ url_for('notifications.index') }}" title="Notificación" data-nx-tooltip="Notificaciones"
+               class="nav-item {% if request.endpoint == 'notifications.index' %}nav-item-active{% endif %} gap-4 px-4 py-3 text-label hover:text-primary hover:bg-primary/5 transition-all group">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                <span class="sidebar-text text-sm font-bold whitespace-nowrap">Notificación</span>
+            </a>
+
+            <a href="{{ url_for('audit.index') }}" title="Historial" data-nx-tooltip="{{ 'Auditoría' if current_user.role == 'administrador' else 'Mi Historial' }}"
+               class="nav-item {% if request.endpoint == 'audit.index' %}nav-item-active{% endif %} gap-4 px-4 py-3 text-label hover:text-primary hover:bg-primary/5 transition-all group">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span class="sidebar-text text-sm font-bold whitespace-nowrap">
+                    {{ 'Auditoría' if current_user.role == 'administrador' else 'Mi Historial' }}
+                </span>
+            </a>
+
+
+            {% endif %}
+        </nav>
+
+        <!-- Sidebar Footer: User Profile -->
+        <div class="mt-auto border-t border-panel-border relative">
+            <div id="userDropdown" class="absolute bottom-full left-3 right-3 mb-2 bg-panel-fill border border-panel-border rounded-2xl shadow-2xl overflow-hidden opacity-0 translate-y-4 pointer-events-none transition-all duration-300 z-50 backdrop-blur-xl">
+                <div class="p-2">
+                    <a href="{{ url_for('auth.logout') }}" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all group/logout">
+                        <svg class="w-5 h-5 flex-shrink-0 group-hover/logout:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-6 0v-1m6-10V7a3 3 0 00-6 0v1"></path></svg>
+                        <span>Cerrar Sesión</span>
+                    </a>
+                </div>
+            </div>
+
+            <div id="userProfileBtn" class="flex items-center gap-3 px-4 py-4 hover:bg-primary/5 rounded-xl mx-2 mb-2 transition-all cursor-pointer group">
+                <div class="w-10 h-10 flex-shrink-0 rounded-xl bg-primary/10 flex items-center justify-center ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                </div>
+                <div class="sidebar-text overflow-hidden">
+                    <p class="text-sm font-bold text-body-text truncate">{{ current_user.email if current_user.is_authenticated else 'Invitado' }}</p>
+                    <p class="text-[12px] text-label/60 font-medium truncate">{{ current_user.role if current_user.is_authenticated else 'nexus_user' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</aside>
