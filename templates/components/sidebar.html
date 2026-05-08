@@ -83,6 +83,12 @@
                 <span class="sidebar-text text-sm font-bold whitespace-nowrap">Áreas</span>
             </a>
 
+            <a href="{{ url_for('iperf.index') }}" title="iperf3 Tests" data-nx-tooltip="Pruebas de Red"
+               class="nav-item {% if request.endpoint == 'iperf.index' %}nav-item-active{% endif %} gap-4 px-4 py-3 text-label hover:text-primary hover:bg-primary/5 transition-all group">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <span class="sidebar-text text-sm font-bold whitespace-nowrap">iperf3 Tests</span>
+            </a>
+
 
 
             <!-- Administrators Section -->

@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}Nexus | iperf3 Network Tests{% endblock %}
+
+{% block breadcrumbs %}
+<span class="text-secondary">Nexus</span>
+<svg class="w-4 h-4 text-label/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+<span class="text-primary">iperf3 Manager</span>
+{% endblock %}
+
+{% block content %}
+<div class="p-6 h-full flex flex-col overflow-hidden">
+    <!-- Header Action Bar -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-black text-primary uppercase tracking-tighter italic">Network Performance</h1>
+            <p class="text-[10px] text-label/40 font-black uppercase tracking-[0.3em]">iperf3 Orchestration & Analysis</p>
+        </div>
+        <button onclick="openModal('newTestModal')" class="nexus-btn nexus-btn-primary px-8">
+            <i class="fas fa-plus-circle mr-2"></i>
+            <span>New Performance Test</span>
+        </button>
+    </div>
+
+    <!-- Stats Row (Conceptual) -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-panel-fill/40 border border-panel-border rounded-2xl p-4 backdrop-blur-md">
+            <p class="text-[10px] font-black text-label/40 uppercase tracking-widest mb-1">Total Tests</p>
+            <p class="text-2xl font-black text-primary">{{ tests|length }}</p>
+        </div>
+        <div class="bg-panel-fill/40 border border-panel-border rounded-2xl p-4 backdrop-blur-md">
+            <p class="text-[10px] font-black text-label/40 uppercase tracking-widest mb-1">Success Rate</p>
+            <p class="text-2xl font-black text-emerald-500">100%</p>
+        </div>
+        <div class="bg-panel-fill/40 border border-panel-border rounded-2xl p-4 backdrop-blur-md">
+            <p class="text-[10px] font-black text-label/40 uppercase tracking-widest mb-1">Average Bandwidth</p>
+            <p class="text-2xl font-black text-sky-500">---</p>
+        </div>
+        <div class="bg-panel-fill/40 border border-panel-border rounded-2xl p-4 backdrop-blur-md">
+            <p class="text-[10px] font-black text-label/40 uppercase tracking-widest mb-1">Active Threads</p>
+            <p class="text-2xl font-black text-amber-500">0</p>
+        </div>
+    </div>
+
+    <!-- Main Table -->
+    <div class="flex-1 bg-panel-fill/20 border border-panel-border rounded-[2rem] overflow-hidden flex flex-col backdrop-blur-xl">
+        <div class="overflow-y-auto flex-1 custom-scrollbar">
+            <table class="w-full text-left border-collapse">
+                <thead class="sticky top-0 bg-panel-header-bg/90 backdrop-blur-md z-10 border-b border-panel-border">
+                    <tr>
+                        <th class="px-6 py-4 text-[10px] font-black text-label/60 uppercase tracking-widest">ID</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-label/60 uppercase tracking-widest">Target Host</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-label/60 uppercase tracking-widest">Config</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-label/60 uppercase tracking-widest">Status</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-label/60 uppercase tracking-widest">Bandwidth</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-label/60 uppercase tracking-widest text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-panel-border/30">
+                    {% for test in tests %}
+                    <tr class="hover:bg-primary/5 transition-colors group">
+                        <td class="px-6 py-4 font-mono text-xs text-secondary italic">#{{ test.id }}</td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                                    <i class="fas fa-server text-xs"></i>
+                                </div>
+                                <span class="font-bold text-label">{{ test.target_host }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 bg-surface-container rounded-md text-[10px] font-black text-label/60 uppercase">{{ test.protocol }}</span>
+                            <span class="px-2 py-1 bg-surface-container rounded-md text-[10px] font-black text-label/60 uppercase">{{ test.duration }}s</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-2">
+                                {% if test.status == 'completed' %}
+                                    <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                                    <span class="text-[10px] font-black text-emerald-500 uppercase">Success</span>
+                                {% elif test.status == 'running' %}
+                                    <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]"></div>
+                                    <span class="text-[10px] font-black text-amber-500 uppercase">Running...</span>
+                                {% elif test.status == 'failed' %}
+                                    <div class="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]"></div>
+                                    <span class="text-[10px] font-black text-rose-500 uppercase">Failed</span>
+                                {% else %}
+                                    <div class="w-2 h-2 rounded-full bg-slate-500"></div>
+                                    <span class="text-[10px] font-black text-slate-500 uppercase">Pending</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 font-mono text-xs font-bold text-primary">
+                            {% if test.status == 'completed' %}
+                                <!-- Lógica para extraer ancho de banda del JSON -->
+                                <span id="bw-{{ test.id }}">Loading...</span>
+                            {% else %}
+                                ---
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onclick="viewResults({{ test.id }})" class="w-8 h-8 rounded-lg bg-surface-container hover:bg-primary hover:text-white transition-all flex items-center justify-center border border-panel-border">
+                                    <i class="fas fa-chart-line text-xs"></i>
+                                </button>
+                                <button class="w-8 h-8 rounded-lg bg-surface-container hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center border border-panel-border">
+                                    <i class="fas fa-trash-alt text-xs"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: New Test -->
+<div id="newTestModal" class="nexus-modal hidden">
+    <div class="modal-backdrop" onclick="closeModal('newTestModal')"></div>
+    <div class="modal-panel max-w-lg">
+        <header class="modal-header border-b border-panel-border mb-6">
+            <h3 class="text-xl font-black text-primary uppercase italic">New iperf3 Performance Test</h3>
+            <p class="text-[10px] text-label/40 font-black uppercase tracking-widest mt-1">Configure Target & Parameters</p>
+        </header>
+        <form id="iperfForm" class="space-y-6">
+            <div class="space-y-2">
+                <label class="text-[11px] font-black text-label/60 uppercase tracking-widest">Target Host (IP or Domain)</label>
+                <input type="text" name="target_host" placeholder="e.g. 192.168.10.50" class="nexus-input w-full" required>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label class="text-[11px] font-black text-label/60 uppercase tracking-widest">Port</label>
+                    <input type="number" name="port" value="5201" class="nexus-input w-full">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[11px] font-black text-label/60 uppercase tracking-widest">Duration (s)</label>
+                    <input type="number" name="duration" value="10" class="nexus-input w-full">
+                </div>
+            </div>
+            <div class="space-y-2">
+                <label class="text-[11px] font-black text-label/60 uppercase tracking-widest">Protocol</label>
+                <select name="protocol" class="nexus-input w-full">
+                    <option value="TCP">TCP (Default)</option>
+                    <option value="UDP">UDP</option>
+                </select>
+            </div>
+            <div class="pt-4 flex gap-4">
+                <button type="button" onclick="closeModal('newTestModal')" class="nexus-btn nexus-btn-secondary flex-1">Cancel</button>
+                <button type="submit" class="nexus-btn nexus-btn-primary flex-1">Launch Test</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Results View -->
+<div id="resultsModal" class="nexus-modal hidden">
+    <div class="modal-backdrop" onclick="closeModal('resultsModal')"></div>
+    <div class="modal-panel max-w-4xl">
+        <header class="modal-header border-b border-panel-border mb-6 flex justify-between items-center">
+            <div>
+                <h3 class="text-xl font-black text-primary uppercase italic">Test Analysis Results</h3>
+                <p id="resultsTitle" class="text-[10px] text-label/40 font-black uppercase tracking-widest mt-1">Execution Log & Metrics</p>
+            </div>
+            <button onclick="closeModal('resultsModal')" class="text-label/40 hover:text-primary"><i class="fas fa-times text-xl"></i></button>
+        </header>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="bg-surface-container/30 p-4 rounded-2xl border border-panel-border">
+                <p class="text-[10px] font-black text-label/40 uppercase mb-1">Average Sender</p>
+                <p id="res-sender" class="text-xl font-black text-primary">0 Mbps</p>
+            </div>
+            <div class="bg-surface-container/30 p-4 rounded-2xl border border-panel-border">
+                <p class="text-[10px] font-black text-label/40 uppercase mb-1">Average Receiver</p>
+                <p id="res-receiver" class="text-xl font-black text-primary">0 Mbps</p>
+            </div>
+            <div class="bg-surface-container/30 p-4 rounded-2xl border border-panel-border">
+                <p class="text-[10px] font-black text-label/40 uppercase mb-1">Retransmissions</p>
+                <p id="res-retrans" class="text-xl font-black text-rose-500">0</p>
+            </div>
+        </div>
+        <div class="bg-black/20 rounded-2xl p-4 border border-panel-border/30 overflow-hidden">
+            <p class="text-[10px] font-black text-label/40 uppercase mb-2">Raw JSON Output</p>
+            <pre id="rawResults" class="text-[10px] font-mono text-primary/80 overflow-y-auto max-h-[300px] custom-scrollbar p-2"></pre>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('iperfForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        fetch("{{ url_for('iperf.run_test') }}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': CSRF_TOKEN
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.test_id) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        });
+    });
+
+    function viewResults(testId) {
+        fetch(`/iperf/results/${testId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('resultsTitle').innerText = `Test #${data.id} - Target: ${data.target_host}`;
+            document.getElementById('rawResults').innerText = JSON.stringify(data.results, null, 2);
+            
+            if (data.results && data.results.end) {
+                const end = data.results.end;
+                const senderBps = end.sum_sent ? end.sum_sent.bits_per_second : 0;
+                const receiverBps = end.sum_received ? end.sum_received.bits_per_second : 0;
+                const retrans = end.sum_sent ? (end.sum_sent.retransmits || 0) : 0;
+                
+                document.getElementById('res-sender').innerText = (senderBps / 1000000).toFixed(2) + ' Mbps';
+                document.getElementById('res-receiver').innerText = (receiverBps / 1000000).toFixed(2) + ' Mbps';
+                document.getElementById('res-retrans').innerText = retrans;
+            } else {
+                document.getElementById('res-sender').innerText = 'N/A';
+                document.getElementById('res-receiver').innerText = 'N/A';
+                document.getElementById('res-retrans').innerText = 'N/A';
+            }
+            
+            openModal('resultsModal');
+        });
+    }
+
+    // Polling conceptual (se podría hacer con sockets, pero para MVP polling)
+    {% for test in tests %}
+        {% if test.status == 'completed' and test.results_json %}
+            (function() {
+                try {
+                    const res = {{ test.results_json|safe }};
+                    if (res.end && res.end.sum_received) {
+                        const bw = (res.end.sum_received.bits_per_second / 1000000).toFixed(2) + ' Mbps';
+                        document.getElementById('bw-{{ test.id }}').innerText = bw;
+                    }
+                } catch(e) {
+                    document.getElementById('bw-{{ test.id }}').innerText = 'Error';
+                }
+            })();
+        {% endif %}
+    {% endfor %}
+</script>
+{% endblock %}

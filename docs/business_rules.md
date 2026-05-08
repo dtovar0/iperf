@@ -61,3 +61,16 @@ Cualquier intento de crear una ruta `/api/v1` o de importar servicios de ejecuci
 
 ### Impacto
 Arquitectura Global, Documentación Técnica, Estructura de Base de Datos.
+
+---
+
+## Gestión de Pruebas de Red (iperf3)
+
+### Regla: Ejecución Asíncrona
+Todas las pruebas de iperf3 deben ejecutarse de forma asíncrona o mediante un proceso en segundo plano para evitar el bloqueo del hilo principal de Flask. Se debe informar al usuario sobre el estado de la prueba (Pendiente, En curso, Completado).
+
+### Ejemplo
+Cuando un usuario inicia un test a 192.168.1.1, la UI muestra un spinner y el estado cambia a "Running". Al finalizar, se guarda el JSON de salida y se muestra en un modal de resultados.
+
+### Impacto
+Módulo iperf, Estructura de Base de Datos (iperf_tests), UX de la Plataforma.

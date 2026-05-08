@@ -95,6 +95,7 @@ def create_app():
     from app.modules.catalogo.routes import catalogo_bp
     from app.modules.drive.routes import drive_bp
     from app.modules.drive_platforms.routes import drive_platforms_bp
+    from app.modules.iperf.routes import iperf_bp
 
 
 
@@ -111,6 +112,7 @@ def create_app():
     app.register_blueprint(catalogo_bp)
     app.register_blueprint(drive_bp)
     app.register_blueprint(drive_platforms_bp)
+    app.register_blueprint(iperf_bp)
 
 
     # Sincronizar Modelos (Importar antes de crear tablas)
