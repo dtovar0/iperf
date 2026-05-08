@@ -71,12 +71,17 @@ class IperfService:
 
     @staticmethod
     def start_server():
-        """Detiene cualquier instancia previa e inicia el servidor iperf3 -s."""
+        """Detiene cualquier instancia previa, limpia logs e inicia el servidor iperf3 -s."""
         try:
             # Siempre intentamos detener procesos previos para evitar conflictos de puerto
             IperfService.stop_server()
             
             log_path = "/home/dtovar/bayblade/iperf/logs/iperf3_server.log"
+            
+            # Limpiar el archivo de logs para no mostrar errores viejos
+            with open(log_path, 'w') as f:
+                f.write(f"--- Server restarted at {datetime.now()} ---\n")
+            
             # Asegurar que el comando use un archivo de log
             subprocess.Popen(['iperf3', '-s', '-D', '--logfile', log_path])
             return True, f"Server (re)started successfully. Logging to {log_path}"

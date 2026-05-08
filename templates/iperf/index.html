@@ -27,6 +27,19 @@
                 <i class="fas fa-server mr-2"></i>
                 <span>Start iperf3 Server</span>
             </button>
+    </div>
+    
+    <!-- Real-time Chart Section -->
+    <div class="mb-6 bg-panel-fill/20 border border-panel-border rounded-[1.5rem] p-6 backdrop-blur-xl shadow-xl h-64 flex flex-col">
+        <div class="flex justify-between items-center mb-4">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-chart-area text-primary text-xs"></i>
+                <span class="text-[10px] font-black text-label/60 uppercase tracking-widest">Real-time Throughput (Gbits/sec)</span>
+            </div>
+            <div id="currentBw" class="text-xl font-black text-primary italic">0.00 <span class="text-[10px] uppercase not-italic opacity-40">Gbps</span></div>
+        </div>
+        <div class="flex-1 relative">
+            <canvas id="bwChart"></canvas>
         </div>
     </div>
 
@@ -71,6 +84,81 @@
 {% block scripts %}
 <script>
     let logPollingInterval = null;
+    let bwChart = null;
+    const chartMaxPoints = 30;
+    const chartData = {
+        labels: Array(chartMaxPoints).fill(''),
+        datasets: [{
+            label: 'Bandwidth',
+            data: Array(chartMaxPoints).fill(0),
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+            borderWidth: 3,
+            tension: 0.4,
+            fill: true,
+            pointRadius: 0,
+            pointHoverRadius: 5
+        }]
+    };
+
+    function initChart() {
+        const ctx = document.getElementById('bwChart').getContext('2d');
+        bwChart = new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { display: false },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.3)',
+                            font: { size: 10, weight: 'bold' },
+                            callback: (value) => value + 'G'
+                        }
+                    }
+                },
+                animation: { duration: 400 }
+            }
+        });
+    }
+
+    function parseBandwidth(logs) {
+        // Regex para capturar el valor y la unidad de bandwidth: [  5]   0.00-1.00   sec  1.12 GBytes  9.61 Gbits/sec
+        // Buscamos la última ocurrencia de un reporte de intervalo
+        const lines = logs.split('\n');
+        for (let i = lines.length - 1; i >= 0; i--) {
+            const match = lines[i].match(/(\d+\.?\d*)\s+(Gbits|Mbits|Kbits|bits)\/sec/);
+            if (match) {
+                let value = parseFloat(match[1]);
+                const unit = match[2];
+                
+                // Normalizar a Gbits/sec para la gráfica
+                if (unit === 'Mbits') value /= 1000;
+                else if (unit === 'Kbits') value /= 1000000;
+                else if (unit === 'bits') value /= 1000000000;
+                
+                return value;
+            }
+        }
+        return null;
+    }
+
+    function updateChart(value) {
+        if (!bwChart || value === null) return;
+        
+        chartData.datasets[0].data.push(value);
+        chartData.datasets[0].data.shift();
+        
+        // Actualizar visualmente el valor actual
+        document.getElementById('currentBw').innerHTML = `${value.toFixed(2)} <span class="text-[10px] uppercase not-italic opacity-40">Gbps</span>`;
+        
+        bwChart.update('none');
+    }
 
     function handleNewTest() {
         fetch("{{ url_for('iperf.start_server') }}", {
@@ -106,6 +194,9 @@
             .then(response => response.json())
             .then(data => {
                 if (data.logs) {
+                    const bw = parseBandwidth(data.logs);
+                    if (bw !== null) updateChart(bw);
+
                     const output = document.getElementById('logOutput');
                     if (output.innerText !== data.logs) {
                         output.innerText = data.logs;
@@ -122,10 +213,13 @@
         document.getElementById('logOutput').innerText = '[SYSTEM] Terminal cleared.\n';
     }
 
-    // Iniciar polling si el server ya está corriendo
-    {% if server_running %}
-        startLogPolling();
-    {% endif %}
+    // Iniciar componentes al cargar
+    document.addEventListener('DOMContentLoaded', () => {
+        initChart();
+        {% if server_running %}
+            startLogPolling();
+        {% endif %}
+    });
 
     function updateServerUI(isRunning) {
         const dot = document.getElementById('statusDot');
