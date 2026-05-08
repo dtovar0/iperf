@@ -24,8 +24,8 @@
                 </span>
             </div>
             <button onclick="handleNewTest()" class="nexus-btn nexus-btn-primary px-8">
-                <i class="fas fa-play-circle mr-2"></i>
-                <span>New Performance Test</span>
+                <i class="fas fa-server mr-2"></i>
+                <span>Start iperf3 Server</span>
             </button>
         </div>
     </div>
@@ -208,11 +208,10 @@
         .then(data => {
             console.log('Server Start Result:', data.message);
             updateServerUI(true);
-            openModal('newTestModal');
+            // El modal ya no se abre por petición del usuario
         })
         .catch(err => {
             console.error('Failed to start server:', err);
-            openModal('newTestModal'); // Aún abrimos el modal aunque falle el server
         });
     }
 
