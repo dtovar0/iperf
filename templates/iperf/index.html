@@ -10,23 +10,31 @@
 
 {% block content %}
 <div class="p-6 h-full flex flex-col overflow-hidden">
-    <!-- Header Action Bar -->
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <h1 class="text-2xl font-black text-primary uppercase tracking-tighter italic">Network Performance</h1>
-            <p class="text-[10px] text-label/40 font-black uppercase tracking-[0.3em]">iperf3 Orchestration & Analysis</p>
-        </div>
-        <div class="flex items-center gap-4">
-            <div id="serverStatusBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container border border-panel-border">
-                <div class="w-2 h-2 rounded-full {% if server_running %}bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]{% else %}bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]{% endif %}" id="statusDot"></div>
-                <span class="text-[10px] font-black {% if server_running %}text-emerald-500{% else %}text-rose-500{% endif %} uppercase tracking-widest" id="statusText">
+    <!-- Header Title Section -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-black text-primary uppercase tracking-tighter italic">Network Performance</h1>
+        <p class="text-[10px] text-label/40 font-black uppercase tracking-[0.3em]">iperf3 Orchestration & Analysis</p>
+    </div>
+
+    <!-- Controls Row -->
+    <div class="mb-8 flex items-center justify-between bg-panel-fill/10 border border-panel-border/30 p-4 rounded-2xl backdrop-blur-sm">
+        <div class="flex items-center gap-6">
+            <div id="serverStatusBadge" class="flex items-center gap-3 px-4 py-2 rounded-xl bg-surface-container border border-panel-border shadow-inner">
+                <div class="w-3 h-3 rounded-full {% if server_running %}bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.6)]{% else %}bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.6)]{% endif %}" id="statusDot"></div>
+                <span class="text-xs font-black {% if server_running %}text-emerald-500{% else %}text-rose-500{% endif %} uppercase tracking-[0.1em]" id="statusText">
                     {% if server_running %}Server Active{% else %}Server Offline{% endif %}
                 </span>
             </div>
-            <button onclick="handleNewTest()" class="nexus-btn nexus-btn-primary px-8">
-                <i class="fas fa-server mr-2"></i>
-                <span>Start iperf3 Server</span>
-            </button>
+            <div class="h-8 w-px bg-panel-border/50"></div>
+            <p class="text-[10px] font-black text-label/30 uppercase tracking-widest">Master Node: <span class="text-label/60">Localhost</span></p>
+        </div>
+        
+        <button onclick="handleNewTest()" class="nexus-btn nexus-btn-primary px-10 py-3 shadow-lg shadow-primary/20">
+            <i class="fas fa-server mr-3"></i>
+            <span>Start iperf3 Server</span>
+        </button>
+    </div>
+
     <!-- Main Grid Layout (60/40 Split) -->
     <div class="flex-1 grid grid-cols-1 md:grid-cols-10 gap-6 overflow-hidden min-h-0">
         
