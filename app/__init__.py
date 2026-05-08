@@ -89,12 +89,6 @@ def create_app():
     from app.modules.notifications.routes import notifications_bp
     from app.modules.auth.routes import auth_bp
     from app.modules.users.routes import users_bp
-    from app.modules.areas.routes import areas_bp
-    from app.modules.platforms.routes import platforms_bp
-    from app.modules.requests.routes import requests_bp
-    from app.modules.catalogo.routes import catalogo_bp
-    from app.modules.drive.routes import drive_bp
-    from app.modules.drive_platforms.routes import drive_platforms_bp
     from app.modules.iperf.routes import iperf_bp
 
 
@@ -106,12 +100,6 @@ def create_app():
     app.register_blueprint(settings_bp)
     app.register_blueprint(notifications_bp)
     app.register_blueprint(users_bp)
-    app.register_blueprint(areas_bp)
-    app.register_blueprint(platforms_bp)
-    app.register_blueprint(requests_bp)
-    app.register_blueprint(catalogo_bp)
-    app.register_blueprint(drive_bp)
-    app.register_blueprint(drive_platforms_bp)
     app.register_blueprint(iperf_bp)
 
 
