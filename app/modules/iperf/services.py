@@ -76,9 +76,10 @@ class IperfService:
             return True, "Server already running"
         
         try:
-            # Ejecutar iperf3 -s en segundo plano
-            subprocess.Popen(['iperf3', '-s', '-D']) # -D para modo daemon if supported, otherwise just &
-            return True, "Server started successfully"
+            log_path = "/home/dtovar/bayblade/iperf/logs/iperf3_server.log"
+            # Asegurar que el comando use un archivo de log para que el usuario pueda verlo
+            subprocess.Popen(['iperf3', '-s', '-D', '--logfile', log_path])
+            return True, f"Server started successfully. Logging to {log_path}"
         except Exception as e:
             return False, str(e)
 

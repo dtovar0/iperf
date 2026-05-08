@@ -30,6 +30,19 @@ def stop_server():
 def server_status():
     return jsonify({'running': IperfService.is_server_running()})
 
+@iperf_bp.route('/server-logs')
+@login_required
+def server_logs():
+    import os
+    log_path = "/home/dtovar/bayblade/iperf/logs/iperf3_server.log"
+    if not os.path.exists(log_path):
+        return jsonify({'logs': 'No logs found yet.'})
+    
+    with open(log_path, 'r') as f:
+        # Devolver las últimas 100 líneas por ejemplo
+        lines = f.readlines()
+        return jsonify({'logs': "".join(lines[-100:])})
+
 @iperf_bp.route('/run', methods=['POST'])
 @login_required
 def run_test():
