@@ -27,54 +27,80 @@
                 <i class="fas fa-server mr-2"></i>
                 <span>Start iperf3 Server</span>
             </button>
-    </div>
-    
-    <!-- Real-time Chart Section -->
-    <div class="mb-6 bg-panel-fill/20 border border-panel-border rounded-[1.5rem] p-6 backdrop-blur-xl shadow-xl h-64 flex flex-col">
-        <div class="flex justify-between items-center mb-4">
-            <div class="flex items-center gap-2">
-                <i class="fas fa-chart-area text-primary text-xs"></i>
-                <span class="text-[10px] font-black text-label/60 uppercase tracking-widest">Real-time Throughput (Gbits/sec)</span>
-            </div>
-            <div id="currentBw" class="text-xl font-black text-primary italic">0.00 <span class="text-[10px] uppercase not-italic opacity-40">Gbps</span></div>
-        </div>
-        <div class="flex-1 relative">
-            <canvas id="bwChart"></canvas>
-        </div>
-    </div>
-
-    <!-- Terminal Emulator -->
-    <div class="flex-1 bg-black/90 border border-panel-border rounded-[1.5rem] overflow-hidden flex flex-col shadow-2xl relative group">
-        <div class="absolute top-4 right-6 flex items-center gap-2 z-20">
-            <div class="flex gap-1.5 mr-4">
-                <div class="w-3 h-3 rounded-full bg-rose-500/50"></div>
-                <div class="w-3 h-3 rounded-full bg-amber-500/50"></div>
-                <div class="w-3 h-3 rounded-full bg-emerald-500/50"></div>
-            </div>
-            <button onclick="clearTerminal()" class="text-[10px] font-black text-label/20 hover:text-primary uppercase tracking-widest transition-colors">Clear Console</button>
-        </div>
+    <!-- Main Grid Layout (60/40 Split) -->
+    <div class="flex-1 grid grid-cols-1 md:grid-cols-10 gap-6 overflow-hidden min-h-0">
         
-        <div class="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <i class="fas fa-terminal text-primary text-xs"></i>
-                <span class="text-[10px] font-black text-label/60 uppercase tracking-widest">System Output: iperf3_server.log</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <div class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
-                <span class="text-[8px] font-black text-primary/60 uppercase tracking-tighter">Live Stream</span>
+        <!-- Left Column: Terminal (60%) -->
+        <div class="md:col-span-6 flex flex-col min-h-0">
+            <div class="flex-1 bg-black/90 border border-panel-border rounded-[1.5rem] overflow-hidden flex flex-col shadow-2xl relative group">
+                <div class="absolute top-4 right-6 flex items-center gap-2 z-20">
+                    <div class="flex gap-1.5 mr-4">
+                        <div class="w-3 h-3 rounded-full bg-rose-500/50"></div>
+                        <div class="w-3 h-3 rounded-full bg-amber-500/50"></div>
+                        <div class="w-3 h-3 rounded-full bg-emerald-500/50"></div>
+                    </div>
+                    <button onclick="clearTerminal()" class="text-[10px] font-black text-label/20 hover:text-primary uppercase tracking-widest transition-colors">Clear Console</button>
+                </div>
+                
+                <div class="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-terminal text-primary text-xs"></i>
+                        <span class="text-[10px] font-black text-label/60 uppercase tracking-widest">System Output: iperf3_server.log</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
+                        <span class="text-[8px] font-black text-primary/60 uppercase tracking-tighter">Live Stream</span>
+                    </div>
+                </div>
+
+                <div id="terminalBody" class="flex-1 p-6 font-mono text-sm overflow-y-auto custom-scrollbar bg-[radial-gradient(circle_at_50%_0%,rgba(37,99,235,0.05)_0%,transparent_100%)]">
+                    <div id="logOutput" class="text-emerald-500/80 leading-relaxed whitespace-pre-wrap">
+                        <span class="text-primary/40">[SYSTEM]</span> Waiting for server to start...
+                    </div>
+                    <div id="cursor" class="inline-block w-2 h-4 bg-primary/40 ml-1 animate-pulse align-middle"></div>
+                </div>
+
+                <div class="px-6 py-2 border-t border-white/5 bg-white/[0.02] flex justify-between items-center">
+                    <p class="text-[9px] font-mono text-label/20 uppercase tracking-widest">nexus@iperf-server:~$ tail -f logs/iperf3.log</p>
+                    <p class="text-[9px] font-mono text-label/20 uppercase tracking-widest" id="lastUpdate">Last Update: --:--:--</p>
+                </div>
             </div>
         </div>
 
-        <div id="terminalBody" class="flex-1 p-6 font-mono text-sm overflow-y-auto custom-scrollbar bg-[radial-gradient(circle_at_50%_0%,rgba(37,99,235,0.05)_0%,transparent_100%)]">
-            <div id="logOutput" class="text-emerald-500/80 leading-relaxed whitespace-pre-wrap">
-                <span class="text-primary/40">[SYSTEM]</span> Waiting for server to start...
-            </div>
-            <div id="cursor" class="inline-block w-2 h-4 bg-primary/40 ml-1 animate-pulse align-middle"></div>
-        </div>
+        <!-- Right Column: Chart (40%) -->
+        <div class="md:col-span-4 flex flex-col min-h-0">
+            <div class="flex-1 bg-panel-fill/20 border border-panel-border rounded-[1.5rem] p-6 backdrop-blur-xl shadow-xl flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                            <i class="fas fa-chart-area text-xs"></i>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] font-black text-label/60 uppercase tracking-widest">Throughput</span>
+                            <span class="block text-[8px] font-black text-label/30 uppercase tracking-tighter">Real-time Gbits/sec</span>
+                        </div>
+                    </div>
+                    <div id="currentBw" class="text-2xl font-black text-primary italic">0.00 <span class="text-[10px] uppercase not-italic opacity-40">Gbps</span></div>
+                </div>
+                
+                <div class="flex-1 relative min-h-0">
+                    <canvas id="bwChart"></canvas>
+                </div>
 
-        <div class="px-6 py-2 border-t border-white/5 bg-white/[0.02] flex justify-between items-center">
-            <p class="text-[9px] font-mono text-label/20 uppercase tracking-widest">nexus@iperf-server:~$ tail -f logs/iperf3.log</p>
-            <p class="text-[9px] font-mono text-label/20 uppercase tracking-widest" id="lastUpdate">Last Update: --:--:--</p>
+                <div class="mt-6 p-4 rounded-2xl bg-surface-container/30 border border-panel-border/50">
+                    <p class="text-[10px] font-black text-label/40 uppercase tracking-widest mb-3">Server Metrics</p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <span class="block text-[8px] font-black text-label/30 uppercase">Port</span>
+                            <span class="block text-sm font-black text-label">5201</span>
+                        </div>
+                        <div class="space-y-1 text-right">
+                            <span class="block text-[8px] font-black text-label/30 uppercase">Protocol</span>
+                            <span class="block text-sm font-black text-label text-primary">TCP/UDP</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
