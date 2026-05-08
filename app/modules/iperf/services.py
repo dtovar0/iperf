@@ -71,15 +71,15 @@ class IperfService:
 
     @staticmethod
     def start_server():
-        """Inicia el servidor iperf3 -s en segundo plano si no está corriendo."""
-        if IperfService.is_server_running():
-            return True, "Server already running"
-        
+        """Detiene cualquier instancia previa e inicia el servidor iperf3 -s."""
         try:
+            # Siempre intentamos detener procesos previos para evitar conflictos de puerto
+            IperfService.stop_server()
+            
             log_path = "/home/dtovar/bayblade/iperf/logs/iperf3_server.log"
-            # Asegurar que el comando use un archivo de log para que el usuario pueda verlo
+            # Asegurar que el comando use un archivo de log
             subprocess.Popen(['iperf3', '-s', '-D', '--logfile', log_path])
-            return True, f"Server started successfully. Logging to {log_path}"
+            return True, f"Server (re)started successfully. Logging to {log_path}"
         except Exception as e:
             return False, str(e)
 
