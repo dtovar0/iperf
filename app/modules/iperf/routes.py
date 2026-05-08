@@ -10,7 +10,25 @@ iperf_bp = Blueprint('iperf', __name__, url_prefix='/iperf')
 @login_required
 def index():
     tests = IperfTest.query.order_by(IperfTest.created_at.desc()).all()
-    return render_template('iperf/index.html', tests=tests)
+    server_running = IperfService.is_server_running()
+    return render_template('iperf/index.html', tests=tests, server_running=server_running)
+
+@iperf_bp.route('/start-server', methods=['POST'])
+@login_required
+def start_server():
+    success, message = IperfService.start_server()
+    return jsonify({'success': success, 'message': message})
+
+@iperf_bp.route('/stop-server', methods=['POST'])
+@login_required
+def stop_server():
+    success, message = IperfService.stop_server()
+    return jsonify({'success': success, 'message': message})
+
+@iperf_bp.route('/server-status')
+@login_required
+def server_status():
+    return jsonify({'running': IperfService.is_server_running()})
 
 @iperf_bp.route('/run', methods=['POST'])
 @login_required

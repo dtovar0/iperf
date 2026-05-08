@@ -72,5 +72,11 @@ Todas las pruebas de iperf3 deben ejecutarse de forma asíncrona o mediante un p
 ### Ejemplo
 Cuando un usuario inicia un test a 192.168.1.1, la UI muestra un spinner y el estado cambia a "Running". Al finalizar, se guarda el JSON de salida y se muestra en un modal de resultados.
 
+### Regla: Orquestación de Servidor (iperf3)
+Al iniciar una nueva prueba de rendimiento mediante el botón principal, el sistema debe asegurar que el servidor iperf3 esté en ejecución (`iperf3 -s`) en el host local para permitir la recepción de tráfico de prueba.
+
+### Ejemplo
+Cuando el usuario presiona "New Performance Test", el backend verifica si el proceso `iperf3 -s` existe; si no, lo inicia en modo daemon antes de abrir la configuración de la prueba.
+
 ### Impacto
-Módulo iperf, Estructura de Base de Datos (iperf_tests), UX de la Plataforma.
+Disponibilidad del servicio de pruebas, Módulo iperf, UX.

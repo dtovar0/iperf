@@ -58,3 +58,35 @@ class IperfService:
             
             test.finished_at = datetime.utcnow()
             db.session.commit()
+
+    @staticmethod
+    def is_server_running():
+        """Verifica si hay un proceso iperf3 -s en ejecución."""
+        try:
+            # Buscamos procesos que tengan 'iperf3' y '-s'
+            output = subprocess.check_output(['pgrep', '-f', 'iperf3 -s'], text=True)
+            return True if output.strip() else False
+        except subprocess.CalledProcessError:
+            return False
+
+    @staticmethod
+    def start_server():
+        """Inicia el servidor iperf3 -s en segundo plano si no está corriendo."""
+        if IperfService.is_server_running():
+            return True, "Server already running"
+        
+        try:
+            # Ejecutar iperf3 -s en segundo plano
+            subprocess.Popen(['iperf3', '-s', '-D']) # -D para modo daemon if supported, otherwise just &
+            return True, "Server started successfully"
+        except Exception as e:
+            return False, str(e)
+
+    @staticmethod
+    def stop_server():
+        """Detiene el servidor iperf3."""
+        try:
+            subprocess.run(['pkill', '-f', 'iperf3 -s'])
+            return True, "Server stopped"
+        except Exception as e:
+            return False, str(e)

@@ -16,10 +16,18 @@
             <h1 class="text-2xl font-black text-primary uppercase tracking-tighter italic">Network Performance</h1>
             <p class="text-[10px] text-label/40 font-black uppercase tracking-[0.3em]">iperf3 Orchestration & Analysis</p>
         </div>
-        <button onclick="openModal('newTestModal')" class="nexus-btn nexus-btn-primary px-8">
-            <i class="fas fa-plus-circle mr-2"></i>
-            <span>New Performance Test</span>
-        </button>
+        <div class="flex items-center gap-4">
+            <div id="serverStatusBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container border border-panel-border">
+                <div class="w-2 h-2 rounded-full {% if server_running %}bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]{% else %}bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]{% endif %}" id="statusDot"></div>
+                <span class="text-[10px] font-black {% if server_running %}text-emerald-500{% else %}text-rose-500{% endif %} uppercase tracking-widest" id="statusText">
+                    {% if server_running %}Server Active{% else %}Server Offline{% endif %}
+                </span>
+            </div>
+            <button onclick="handleNewTest()" class="nexus-btn nexus-btn-primary px-8">
+                <i class="fas fa-play-circle mr-2"></i>
+                <span>New Performance Test</span>
+            </button>
+        </div>
     </div>
 
     <!-- Stats Row (Conceptual) -->
@@ -187,7 +195,45 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+    function handleNewTest() {
+        // Ejecutar iperf3 -s
+        fetch("{{ url_for('iperf.start_server') }}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': CSRF_TOKEN
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Server Start Result:', data.message);
+            updateServerUI(true);
+            openModal('newTestModal');
+        })
+        .catch(err => {
+            console.error('Failed to start server:', err);
+            openModal('newTestModal'); // Aún abrimos el modal aunque falle el server
+        });
+    }
+
+    function updateServerUI(isRunning) {
+        const dot = document.getElementById('statusDot');
+        const text = document.getElementById('statusText');
+        
+        if (isRunning) {
+            dot.classList.remove('bg-rose-500', 'shadow-[0_0_8px_rgba(244,63,94,0.5)]');
+            dot.classList.add('bg-emerald-500', 'shadow-[0_0_8px_rgba(16,185,129,0.5)]');
+            text.classList.remove('text-rose-500');
+            text.classList.add('text-emerald-500');
+            text.innerText = 'Server Active';
+        } else {
+            dot.classList.remove('bg-emerald-500', 'shadow-[0_0_8px_rgba(16,185,129,0.5)]');
+            dot.classList.add('bg-rose-500', 'shadow-[0_0_8px_rgba(244,63,94,0.5)]');
+            text.classList.remove('text-emerald-500');
+            text.classList.add('text-rose-500');
+            text.innerText = 'Server Offline';
+        }
+    }
+
     document.getElementById('iperfForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const formData = new FormData(this);
