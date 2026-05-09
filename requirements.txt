@@ -18,3 +18,5 @@ Flask-WTF==1.2.1
 iperf3==0.1.11
 dash>=2.14.0
 plotly>=5.18.0
+matplotlib
+reportlab
