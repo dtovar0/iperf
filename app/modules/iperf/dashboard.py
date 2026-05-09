@@ -51,88 +51,138 @@ def init_dashboard(server):
 
     # ─── Layout ───────────────────────────────────────────────────────────────────
     dash_app.layout = html.Div(
-        className="min-h-screen p-6 text-gray-200",
-        style={"backgroundColor": DARK_BG, "fontFamily": "'Inter', sans-serif"},
+        className="w-full h-full flex flex-col p-6 overflow-hidden bg-transparent",
+        style={"fontFamily": "'Inter', sans-serif"},
         children=[
-            # Header
-            html.Div(className="flex flex-col mb-8", children=[
-                html.H1("NETWORK PERFORMANCE", className="text-3xl font-black text-blue-600 tracking-tighter italic uppercase"),
-                html.P("iperf3 Orchestration & Analysis", className="text-xs font-black text-gray-500 uppercase tracking-widest"),
-            ]),
-
-            # Controls
-            html.Div(className="flex items-center justify-between p-4 mb-8 border bg-gray-900 bg-opacity-40 rounded-2xl border-white border-opacity-10 backdrop-blur-sm", children=[
-                html.Div(className="flex items-center gap-6", children=[
-                    html.Div(id="status-badge", className="flex items-center gap-3 px-4 py-2 border rounded-xl bg-gray-800 border-white border-opacity-10 shadow-inner", children=[
-                        html.Div(id="status-dot", className="w-3 h-3 rounded-full bg-red-500 shadow-lg"),
-                        html.Span(id="status-text", children="SERVER OFFLINE", className="text-xs font-bold text-red-500 uppercase tracking-widest")
-                    ]),
-                    html.Div(className="h-8 w-px bg-white bg-opacity-10"),
-                    html.P(f"MASTER NODE: 127.0.0.1:5201", className="text-xs font-black text-gray-500 uppercase tracking-widest"),
+            # Header Title Section
+            html.Div(className="mb-6 flex items-center justify-between", children=[
+                html.Div(children=[
+                    html.H1("Monitoreo de Red", className="text-2xl font-black text-primary uppercase tracking-tighter italic leading-none"),
+                    html.P("iperf3 Orchestration & Analysis", className="text-[12px] text-primary/60 font-bold tracking-[0.3em] uppercase mt-1"),
                 ]),
-                html.Div(className="flex gap-4", children=[
-                    html.Button([html.I(className="fas fa-play mr-2"), "START SERVER"], id="btn-start", className="px-6 py-2 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-lg shadow-blue-900/20"),
-                    html.Button([html.I(className="fas fa-stop mr-2"), "STOP SERVER"], id="btn-stop", className="px-6 py-2 text-xs font-bold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-all shadow-lg shadow-red-900/20"),
+                html.Div(className="flex items-center gap-3", children=[
+                    html.Div(id="status-badge", className="flex items-center gap-4 px-5 py-2.5 rounded-2xl bg-surface-container border border-panel-border shadow-xl shadow-primary/5", children=[
+                        html.Div(id="status-dot", className="w-3 h-3 rounded-full bg-danger shadow-lg animate-pulse"),
+                        html.Span(id="status-text", children="SERVIDOR FUERA DE LÍNEA", className="text-[11px] font-black text-danger uppercase tracking-widest")
+                    ]),
                 ])
             ]),
 
-            # Main Grid
-            html.Div(className="grid grid-cols-1 md:grid-cols-10 gap-6", children=[
-                # Left: Console (60%)
-                html.Div(className="md:col-span-6 flex flex-col min-h-[500px]", children=[
-                    html.Div(className="flex-1 bg-black bg-opacity-90 border border-white border-opacity-10 rounded-3xl overflow-hidden flex flex-col shadow-2xl", children=[
-                        html.Div(className="flex items-center justify-between px-6 py-4 border-b border-white border-opacity-5 bg-white bg-opacity-5", children=[
-                            html.Div(className="flex items-center gap-3", children=[
-                                html.I(className="fas fa-terminal text-blue-500 text-xs"),
-                                html.Span("SYSTEM OUTPUT: iperf3_server.log", className="text-xs font-bold text-gray-400 uppercase tracking-widest")
+            # Controls Row
+            html.Div(className="mb-8 flex items-center justify-between bg-panel-fill border border-panel-border p-5 rounded-[2rem] shadow-2xl shadow-primary/5", children=[
+                html.Div(className="flex items-center gap-8 px-4", children=[
+                    html.Div(className="flex flex-col", children=[
+                        html.Span("Nodo Maestro", className="text-[10px] font-black text-label/30 uppercase tracking-widest"),
+                        html.Span("Localhost:5201", className="text-sm font-bold text-label uppercase"),
+                    ]),
+                    html.Div(className="h-10 w-px bg-panel-border/50"),
+                    html.Div(className="flex flex-col", children=[
+                        html.Span("Protocolo", className="text-[10px] font-black text-label/30 uppercase tracking-widest"),
+                        html.Span("TCP / UDP (Dinamico)", className="text-sm font-bold text-primary uppercase tracking-tighter"),
+                    ]),
+                ]),
+                
+                html.Div(className="flex gap-4", children=[
+                    html.Button([
+                        html.I(className="fas fa-play mr-2"), 
+                        html.Span("Iniciar Servidor")
+                    ], id="btn-start", className="nexus-btn nexus-btn-primary px-10 py-4 rounded-2xl shadow-2xl shadow-primary/30 group"),
+                    
+                    html.Button([
+                        html.I(className="fas fa-stop mr-2"), 
+                        html.Span("Detener")
+                    ], id="btn-stop", className="nexus-btn nexus-btn-secondary border-rose-500/20 text-rose-500 hover:bg-rose-500/10 px-10 py-4 rounded-2xl shadow-2xl group"),
+                ])
+            ]),
+
+            # Main Grid Layout (60/40 Split)
+            html.Div(className="flex-grow grid grid-cols-1 lg:grid-cols-10 gap-6 overflow-hidden min-h-0", children=[
+                
+                # Left Column: Terminal (60%)
+                html.Div(className="lg:col-span-6 flex flex-col min-h-0", children=[
+                    html.Div(className="flex-1 bg-[#030712] border border-panel-border rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl relative group", children=[
+                        # Terminal Header
+                        html.Div(className="px-8 py-5 border-b border-white/5 bg-white/[0.02] flex items-center justify-between", children=[
+                            html.Div(className="flex items-center gap-4", children=[
+                                html.Div(className="flex gap-2", children=[
+                                    html.Div(className="w-3 h-3 rounded-full bg-red-500/40"),
+                                    html.Div(className="w-3 h-3 rounded-full bg-amber-500/40"),
+                                    html.Div(className="w-3 h-3 rounded-full bg-emerald-500/40"),
+                                ]),
+                                html.Div(className="h-4 w-px bg-white/10 mx-2"),
+                                html.Div(className="flex items-center gap-3", children=[
+                                    html.I(className="fas fa-terminal text-primary text-xs"),
+                                    html.Span("iperf3_runtime.log", className="text-[11px] font-black text-label/60 uppercase tracking-widest")
+                                ]),
                             ]),
-                            html.Button("CLEAR CONSOLE", id="btn-clear", className="text-xs font-bold text-gray-600 hover:text-blue-500 transition-colors")
+                            html.Button("Limpiar Consola", id="btn-clear", className="text-[10px] font-black text-label/30 hover:text-primary uppercase tracking-[0.2em] transition-all")
                         ]),
-                        html.Div(id="log-container", className="flex-1 p-6 font-mono text-sm overflow-y-auto", children=[
-                            html.Pre(id="log-output", className="text-emerald-500 leading-relaxed whitespace-pre-wrap", children="Waiting for server activity...")
+                        
+                        # Terminal Body
+                        html.Div(id="log-container", className="flex-1 p-8 font-mono text-[13px] overflow-y-auto custom-scrollbar bg-[radial-gradient(circle_at_50%_0%,rgba(37,99,235,0.08)_0%,transparent_100%)]", children=[
+                            html.Pre(id="log-output", className="text-emerald-500/80 leading-relaxed whitespace-pre-wrap", children="Esperando inicialización de servicios...")
                         ]),
-                        html.Div(className="px-6 py-2 border-t border-white border-opacity-5 bg-white bg-opacity-2 flex justify-between items-center", children=[
-                            html.P("nexus@iperf-server:~$ tail -f logs/iperf3.log", className="text-xs font-mono text-gray-700 uppercase tracking-widest"),
-                            html.P(id="last-update", children="LAST UPDATE: --:--:--", className="text-xs font-mono text-gray-700 uppercase tracking-widest")
+
+                        # Terminal Footer
+                        html.Div(className="px-8 py-3 border-t border-white/5 bg-white/[0.01] flex justify-between items-center", children=[
+                            html.P("nexus@master:~$ tail -f /var/log/iperf3.log", className="text-[10px] font-mono text-label/20 uppercase tracking-widest italic"),
+                            html.P(id="last-update", children="Sincronización: --:--:--", className="text-[10px] font-mono text-label/20 uppercase tracking-widest")
                         ])
                     ])
                 ]),
 
-                # Right: Stats (40%)
-                html.Div(className="md:col-span-4 flex flex-col gap-6", children=[
-                    # Throughput Card
-                    html.Div(className="flex-1 bg-gray-800 bg-opacity-40 border border-white border-opacity-10 rounded-3xl p-6 backdrop-blur-xl shadow-xl flex flex-col", children=[
-                        html.Div(className="flex justify-between items-center mb-6", children=[
-                            html.Div(className="flex items-center gap-3", children=[
-                                html.Div(html.I(className="fas fa-chart-line text-blue-500"), className="w-8 h-8 rounded-lg bg-blue-500 bg-opacity-10 flex items-center justify-center"),
+                # Right Column: Chart & Stats (40%)
+                html.Div(className="lg:col-span-4 flex flex-col min-h-0 gap-6", children=[
+                    # Chart Panel
+                    html.Div(className="flex-grow bg-panel-fill border border-panel-border rounded-[2.5rem] p-8 shadow-2xl shadow-primary/5 flex flex-col relative overflow-hidden", children=[
+                        html.Div(className="flex justify-between items-center mb-8 relative z-10", children=[
+                            html.Div(className="flex items-center gap-4", children=[
+                                html.Div(className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner", children=[
+                                    html.I(className="fas fa-chart-line text-lg")
+                                ]),
                                 html.Div([
-                                    html.Span("THROUGHPUT", className="block text-xs font-bold text-gray-400 uppercase tracking-widest"),
-                                    html.Span("REAL-TIME Gbits/sec", className="block text-xs font-bold text-gray-600 uppercase tracking-tighter"),
+                                    html.Span("Throughput", className="block text-[11px] font-black text-label/60 uppercase tracking-widest leading-none"),
+                                    html.Span("Análisis de Ancho de Banda", className="block text-[9px] font-black text-primary uppercase tracking-tighter mt-1"),
                                 ])
                             ]),
-                            html.Div([
-                                html.Span(id="current-bw", children="0.00", className="text-3xl font-black text-blue-500 italic"),
-                                html.Span(" Gbps", className="text-xs font-bold text-gray-600 uppercase not-italic ml-1")
+                            html.Div(className="text-right", children=[
+                                html.Span(id="current-bw", children="0.00", className="text-3xl font-black text-primary italic leading-none"),
+                                html.Span(" Gbits/sec", className="text-[10px] font-black text-label/30 uppercase tracking-widest block mt-1")
                             ])
                         ]),
+                        
                         dcc.Graph(id="bw-chart", className="flex-1", figure=empty_graph(), config={'displayModeBar': False}),
                     ]),
 
-                    # Small Stats Row
-                    html.Div(className="grid grid-cols-2 gap-4", children=[
-                        html.Div(className="p-4 bg-gray-800 bg-opacity-40 border border-white border-opacity-10 rounded-2xl", children=[
-                            html.Span("JITTER", className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1"),
-                            html.Div([
-                                html.Span(id="stat-jitter", children="0.000", className="text-xl font-black text-amber-500"),
-                                html.Span(" ms", className="text-xs font-bold text-gray-600 ml-1")
+                    # Stats Panel
+                    html.Div(className="bg-surface-container border border-panel-border rounded-[2.5rem] p-8 shadow-xl shadow-primary/5", children=[
+                        html.Div(className="flex items-center gap-3 mb-6", children=[
+                            html.Div(className="w-1.5 h-1.5 rounded-full bg-primary"),
+                            html.H3("Métricas del Servidor", className="text-[11px] font-black text-label uppercase tracking-[0.2em]")
+                        ]),
+                        html.Div(className="grid grid-cols-2 gap-8", children=[
+                            html.Div(className="group", children=[
+                                html.Span("Jitter", className="block text-[9px] font-black text-label/30 uppercase tracking-widest mb-1"),
+                                html.Div(className="flex items-center gap-2", children=[
+                                    html.Span(id="stat-jitter", children="0.000", className="text-xl font-black text-label"),
+                                    html.Span("ms", className="text-[10px] font-bold text-label/40 uppercase")
+                                ])
+                            ]),
+                            html.Div(className="group text-right", children=[
+                                html.Span("Retransmisiones", className="block text-[9px] font-black text-label/30 uppercase tracking-widest mb-1"),
+                                html.Div(className="flex items-center justify-end gap-2", children=[
+                                    html.Span(id="stat-retx", children="0", className="text-xl font-black text-danger"),
+                                    html.Span("pkts", className="text-[10px] font-bold text-label/40 uppercase")
+                                ])
                             ])
                         ]),
-                        html.Div(className="p-4 bg-gray-800 bg-opacity-40 border border-white border-opacity-10 rounded-2xl", children=[
-                            html.Span("RETX", className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1"),
-                            html.Div([
-                                html.Span(id="stat-retx", children="0", className="text-xl font-black text-red-500"),
-                                html.Span(" pkts", className="text-xs font-bold text-gray-600 ml-1")
-                            ])
+                        
+                        html.Div(className="mt-8 pt-6 border-t border-panel-border/50 flex items-center justify-between", children=[
+                            html.Div(className="flex -space-x-2", children=[
+                                html.Div("N", className="w-8 h-8 rounded-full bg-primary/20 border-2 border-surface-container flex items-center justify-center text-[10px] font-black text-primary"),
+                                html.Div("S", className="w-8 h-8 rounded-full bg-emerald-500/20 border-2 border-surface-container flex items-center justify-center text-[10px] font-black text-emerald-500"),
+                            ]),
+                            html.Span("Nexus Master Node v2.0", className="text-[10px] font-bold text-label/40 uppercase tracking-widest italic")
                         ])
                     ])
                 ])
@@ -165,16 +215,16 @@ def init_dashboard(server):
         if btn_id == "btn-start":
             IperfService.start_server()
             return {"running": True}, \
-                   "flex items-center gap-3 px-4 py-2 border rounded-xl bg-gray-800 border-emerald-500 border-opacity-50 shadow-lg shadow-emerald-900/10", \
-                   "w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.6)]", \
-                   "SERVER ACTIVE", "text-xs font-bold text-emerald-500 uppercase tracking-widest"
+                   "flex items-center gap-4 px-5 py-2.5 rounded-2xl bg-surface-container border border-success/30 shadow-xl shadow-success/10", \
+                   "w-3 h-3 rounded-full bg-success shadow-[0_0_15px_rgba(var(--color-success),0.5)] animate-pulse", \
+                   "SERVIDOR ACTIVO", "text-[11px] font-black text-success uppercase tracking-widest"
         
         elif btn_id == "btn-stop":
             IperfService.stop_server()
             return {"running": False}, \
-                   "flex items-center gap-3 px-4 py-2 border rounded-xl bg-gray-800 border-white border-opacity-10 shadow-inner", \
-                   "w-3 h-3 rounded-full bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.6)]", \
-                   "SERVER OFFLINE", "text-xs font-bold text-red-500 uppercase tracking-widest"
+                   "flex items-center gap-4 px-5 py-2.5 rounded-2xl bg-surface-container border border-panel-border shadow-xl shadow-primary/5", \
+                   "w-3 h-3 rounded-full bg-danger shadow-[0_0_15px_rgba(var(--color-danger),0.5)]", \
+                   "SERVIDOR FUERA DE LÍNEA", "text-[11px] font-black text-danger uppercase tracking-widest"
 
         return dash.no_update
 
@@ -206,8 +256,6 @@ def init_dashboard(server):
                 lines = f.readlines()
                 new_logs = "".join(lines[-40:]) # Últimas 40 líneas
                 
-                # Intentar extraer bandwidth de la última línea formateada
-                # Formato esperado: [2026-...] Test finalizado. Bandwidth: 10.70 Gbits/sec
                 for line in reversed(lines):
                     if "Bandwidth:" in line:
                         try:
@@ -219,8 +267,6 @@ def init_dashboard(server):
                                 if not timestamps or timestamps[-1] != ts:
                                     timestamps.append(ts)
                                     recv_mbps.append(val)
-                                    # Para demo, jitter y retx se extraen si están en JSON
-                                    # Por ahora usaremos valores dummy o los extraeremos del JSON si existe
                                     if "JSON:" in line:
                                         data = json.loads(line.split("JSON:")[1])
                                         jitter_ms.append(data.get('end', {}).get('sum_received', {}).get('jitter_ms', 0))
@@ -230,31 +276,47 @@ def init_dashboard(server):
                             pass
 
         # Construir Gráfica
-        fig = go.Figure(layout=go.Layout(**{
-            "paper_bgcolor": "rgba(0,0,0,0)",
-            "plot_bgcolor": "rgba(0,0,0,0)",
-            "margin": dict(l=48, r=12, t=8, b=36),
-            "hovermode": "x unified",
-            "xaxis": dict(showgrid=False, color=MUTED, tickfont=dict(size=10)),
-            "yaxis": dict(gridcolor="rgba(255,255,255,0.05)", color=MUTED, tickfont=dict(size=10))
-        }))
+        fig = go.Figure()
         
         with lock:
             if timestamps:
                 fig.add_trace(go.Scatter(
                     x=list(timestamps), y=list(recv_mbps),
                     name="Throughput",
-                    line=dict(color="#2563eb", width=3),
+                    line=dict(color="#2563eb", width=4, shape='spline', smoothing=1.3),
                     fill="tozeroy",
-                    fillcolor="rgba(37,99,235,0.1)"
+                    fillcolor="rgba(37,99,235,0.08)",
+                    mode='lines',
+                    hoverinfo='y+name',
                 ))
 
+        fig.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            margin=dict(l=48, r=12, t=8, b=36),
+            hovermode="x unified",
+            xaxis=dict(
+                showgrid=False, 
+                color="rgba(255,255,255,0.2)", 
+                tickfont=dict(size=10, weight='bold'),
+                zeroline=False
+            ),
+            yaxis=dict(
+                gridcolor="rgba(255,255,255,0.03)", 
+                color="rgba(255,255,255,0.2)", 
+                tickfont=dict(size=10, weight='bold'),
+                zeroline=False,
+                side='left'
+            ),
+            showlegend=False
+        )
+        
         last_bw = f"{recv_mbps[-1]:.2f}" if recv_mbps else "0.00"
         last_jit = f"{jitter_ms[-1]:.3f}" if jitter_ms else "0.000"
         last_retx = str(retransmits[-1]) if retransmits else "0"
         
         return fig, last_bw, last_jit, last_retx, \
-               new_logs or "No activity recorded.", \
-               f"LAST UPDATE: {datetime.now().strftime('%H:%M:%S')}"
+               new_logs or "No se ha registrado actividad.", \
+               f"Sincronización: {datetime.now().strftime('%H:%M:%S')}"
 
     return dash_app
