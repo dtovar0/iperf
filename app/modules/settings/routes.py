@@ -228,26 +228,7 @@ def save():
         if "bg_color" in data: config.bg_color = data["bg_color"]
         if "text_color" in data: config.text_color = data["text_color"]
         
-        # Banner Logic
-        if "portal_banner" in data and data["portal_banner"].startswith("data:image"):
-            import base64
-            import os
-            branding_dir = os.path.join(os.getcwd(), 'assets', 'img', 'branding')
-            if not os.path.exists(branding_dir): os.makedirs(branding_dir)
-            
-            try:
-                header, encoded = data["portal_banner"].split(",", 1)
-                file_ext = header.split("/")[1].split(";")[0]
-                filename = f"portal_banner.{file_ext}"
-                filepath = os.path.join(branding_dir, filename)
-                with open(filepath, "wb") as f:
-                    f.write(base64.b64decode(encoded))
-                config.portal_banner = f"/assets/img/branding/{filename}"
-            except Exception as e:
-                print(f"Error saving banner: {e}")
-                config.portal_banner = data["portal_banner"]
-        elif "portal_banner" in data:
-            config.portal_banner = data["portal_banner"]
+
         
         # Add Audit Log Entry
         audit = AuditLog(

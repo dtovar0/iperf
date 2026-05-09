@@ -1,11 +1,16 @@
+import iperf3
 import subprocess
 import json
 import threading
+import time
 from datetime import datetime
 from app import db
 from app.modules.iperf.models import IperfTest
 
 class IperfService:
+    _server_thread = None
+    _stop_server_flag = False
+
     @staticmethod
     def run_test_async(test_id, app):
         """Inicia la ejecución de iperf3 en un hilo separado."""
@@ -25,35 +30,27 @@ class IperfService:
             db.session.commit()
 
             try:
-                # Construir comando iperf3 -J (JSON output)
-                cmd = [
-                    'iperf3', 
-                    '-c', test.target_host, 
-                    '-p', str(test.port), 
-                    '-t', str(test.duration),
-                    '-J'
-                ]
+                # Usar la librería iperf3 en lugar del comando de sistema
+                client = iperf3.Client()
+                client.server_hostname = test.target_host
+                client.port = test.port
+                client.duration = test.duration
+                client.protocol = test.protocol.lower() # 'tcp' o 'udp'
                 
-                if test.protocol == 'UDP':
-                    cmd.append('-u')
-
-                process = subprocess.run(cmd, capture_output=True, text=True)
+                # Ejecutar el test (bloqueante en este hilo)
+                result = client.run()
                 
-                if process.returncode == 0 or process.stdout:
-                    try:
-                        # Validar si es JSON válido
-                        json.loads(process.stdout)
-                        test.results_json = process.stdout
-                        test.status = 'completed'
-                    except json.JSONDecodeError:
-                        test.error_message = "Error al decodificar JSON de iperf3: " + process.stdout[:500]
-                        test.status = 'failed'
-                else:
-                    test.error_message = process.stderr or "Error desconocido al ejecutar iperf3"
+                if result.error:
+                    test.error_message = result.error
                     test.status = 'failed'
+                else:
+                    # Guardar los resultados en formato JSON
+                    # result.json es un diccionario con toda la data de iperf3
+                    test.results_json = json.dumps(result.json)
+                    test.status = 'completed'
 
             except Exception as e:
-                test.error_message = str(e)
+                test.error_message = f"Excepción en iperf3-python: {str(e)}"
                 test.status = 'failed'
             
             test.finished_at = datetime.utcnow()
@@ -61,44 +58,80 @@ class IperfService:
 
     @staticmethod
     def is_server_running():
-        """Verifica si hay un proceso iperf3 -s en ejecución."""
+        """Verifica si el hilo del servidor está activo o si el puerto está ocupado."""
+        if IperfService._server_thread and IperfService._server_thread.is_alive():
+            return True
+        
+        # Fallback: Verificar si hay algún proceso iperf3 (binario) corriendo
         try:
-            # Buscamos procesos que tengan 'iperf3' y '-s'
-            output = subprocess.check_output(['pgrep', '-f', 'iperf3 -s'], text=True)
+            output = subprocess.check_output(['pgrep', '-f', 'iperf3'], text=True)
             return True if output.strip() else False
         except subprocess.CalledProcessError:
             return False
 
     @staticmethod
+    def _server_loop(port, log_path):
+        """Bucle del servidor que se ejecuta en un hilo secundario."""
+        while not IperfService._stop_server_flag:
+            try:
+                server = iperf3.Server()
+                server.port = port
+                # El método run() bloquea hasta que un cliente se conecta y termina el test
+                result = server.run()
+                
+                if result and log_path:
+                    with open(log_path, 'a') as f:
+                        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        # Formatear una línea que el frontend pueda parsear mediante regex
+                        # Ejemplo: [ 5] 0.00-10.00 sec 1.25 GBytes 10.7 Gbits/sec
+                        mbps = result.received_Mbps
+                        gbps = mbps / 1000
+                        f.write(f"[{timestamp}] Test finalizado. Bandwidth: {gbps:.2f} Gbits/sec\n")
+                        f.write(f"[{timestamp}] JSON: {json.dumps(result.json)}\n")
+            except Exception as e:
+                if not IperfService._stop_server_flag:
+                    with open(log_path, 'a') as f:
+                        f.write(f"[{datetime.now()}] Error en el servidor: {str(e)}\n")
+                    time.sleep(1)
+
+    @staticmethod
     def start_server():
-        """Detiene cualquier instancia previa, limpia logs e inicia el servidor iperf3 -s."""
+        """Inicia el servidor iperf3 usando la librería en un hilo de fondo."""
         try:
-            # Siempre intentamos detener procesos previos para evitar conflictos de puerto
+            # Detener cualquier instancia previa
             IperfService.stop_server()
             
             log_path = "/home/dtovar/bayblade/iperf/logs/iperf3_server.log"
             
-            # Limpiar el archivo de logs para no mostrar errores viejos
-            with open(log_path, 'w') as f:
-                f.write(f"--- Server restarted at {datetime.now()} ---\n")
+            # Limpiar/Inicializar logs
+            with open(log_path, 'a') as f:
+                f.write(f"\n--- Servidor iniciado con iperf3-python a las {datetime.now()} ---\n")
             
-            # Asegurar que el comando use un archivo de log
-            subprocess.Popen(['iperf3', '-s', '-D', '--logfile', log_path])
-            return True, f"Server (re)started successfully. Logging to {log_path}"
+            IperfService._stop_server_flag = False
+            IperfService._server_thread = threading.Thread(
+                target=IperfService._server_loop, 
+                args=(5201, log_path),
+                daemon=True
+            )
+            IperfService._server_thread.start()
+            
+            return True, f"Servidor iniciado correctamente (vía librería). Logs en {log_path}"
         except Exception as e:
-            return False, str(e)
+            return False, f"Error al iniciar servidor: {str(e)}"
 
     @staticmethod
     def stop_server():
-        """Detiene agresivamente cualquier proceso iperf3."""
+        """Detiene el hilo del servidor y limpia procesos/puertos."""
         try:
-            import time
-            # Matar todos los procesos iperf3 de forma agresiva
-            subprocess.run(['pkill', '-9', 'iperf3'])
-            # Intentar liberar el puerto 5201 si fuser está disponible
+            IperfService._stop_server_flag = True
+            
+            # Matar procesos binarios si existen
+            subprocess.run(['pkill', '-9', 'iperf3'], capture_output=True)
+            
+            # Liberar el puerto agresivamente
             subprocess.run(['fuser', '-k', '5201/tcp'], capture_output=True)
-            # Pequeña espera para asegurar que el SO libere el socket
-            time.sleep(1)
-            return True, "Server stopped and port cleared"
+            
+            time.sleep(0.5)
+            return True, "Servidor detenido y puerto liberado"
         except Exception as e:
-            return False, str(e)
+            return False, f"Error al detener servidor: {str(e)}"

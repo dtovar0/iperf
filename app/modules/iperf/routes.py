@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, current_app
+from flask import Blueprint, render_template, request, jsonify, current_app, redirect, url_for
 from flask_login import login_required, current_user
 from app import db
 from app.modules.iperf.models import IperfTest
@@ -9,9 +9,7 @@ iperf_bp = Blueprint('iperf', __name__, url_prefix='/iperf')
 @iperf_bp.route('/')
 @login_required
 def index():
-    tests = IperfTest.query.order_by(IperfTest.created_at.desc()).all()
-    server_running = IperfService.is_server_running()
-    return render_template('iperf/index.html', tests=tests, server_running=server_running)
+    return redirect('/iperf/dashboard/')
 
 @iperf_bp.route('/start-server', methods=['POST'])
 @login_required

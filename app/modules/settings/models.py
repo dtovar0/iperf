@@ -9,7 +9,7 @@ class SystemConfig(db.Model):
     portal_identity_type = db.Column(db.String(10), default='icon') # 'icon' or 'image'
     portal_icon = db.Column(db.Text, nullable=True) # Storing SVG code or Image DataURL/Path
     bg_color = db.Column(db.String(20), default='#0f172a')
-    portal_banner = db.Column(db.Text, nullable=True) # Path to banner image
+
     text_color = db.Column(db.String(20), default='#ffffff')
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
@@ -18,7 +18,7 @@ class SystemConfig(db.Model):
             "portal_name": self.portal_name,
             "portal_identity_type": self.portal_identity_type,
             "portal_icon": self.portal_icon,
-            "portal_banner": self.portal_banner,
+
             "bg_color": self.bg_color,
             "text_color": self.text_color
         }

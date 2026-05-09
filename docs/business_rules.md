@@ -78,5 +78,8 @@ El botón principal de la interfaz de iperf3 garantiza un inicio limpio mediante
 ### Ejemplo
 Al presionar "Start iperf3 Server", el backend ejecuta `pkill -9 iperf3` seguido de `fuser -k 5201/tcp` y una pausa de 1 segundo antes del `iperf3 -s -D`. Esto previene el error "Address already in use".
 
+### Regla: Uso de Librería Nativa (iperf3-python)
+Para las pruebas de red y la orquestación del servidor, se debe utilizar la librería `iperf3-python`. Esto permite un manejo estructurado de los resultados y una integración nativa con Flask, manteniendo la ejecución asíncrona mediante hilos de Python.
+
 ### Impacto
 Disponibilidad del servicio de pruebas, Módulo iperf, UX.

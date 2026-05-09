@@ -61,6 +61,9 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
+    # Eximir las rutas de Dash de CSRF ya que Dash maneja su propia seguridad
+    csrf.exempt("dash.dash.dispatch") 
+    
     login_manager.login_view = 'auth.login'
     login_manager.login_message = "Por favor, inicie sesión para acceder."
     login_manager.login_message_category = "info"
@@ -101,6 +104,10 @@ def create_app():
     app.register_blueprint(notifications_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(iperf_bp)
+
+    # Inicializar Dashboard de Dash (iperf)
+    from app.modules.iperf.dashboard import init_dashboard
+    init_dashboard(app)
 
 
     # Sincronizar Modelos (Importar antes de crear tablas)

@@ -99,31 +99,7 @@ function initLivePreview() {
         });
     }
 
-    // 5. Live Sync: Banner Upload
-    const bannerInput = document.getElementById('portal-banner-input');
-    const bannerPreviewImg = document.getElementById('banner-preview-img');
-    const bannerDropZone = document.getElementById('banner-drop-zone');
 
-    if (bannerInput && bannerDropZone) {
-        bannerInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    let img = document.getElementById('banner-preview-img');
-                    if (!img) {
-                        img = document.createElement('img');
-                        img.id = 'banner-preview-img';
-                        img.className = 'absolute inset-0 w-full h-full object-cover opacity-30';
-                        bannerDropZone.prepend(img);
-                    }
-                    img.src = event.target.result;
-                    showToast('Banner actualizado en vista previa', 'info');
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-    }
 
     // 4. Live Sync: Color Pickers
     const bgColorInput = document.getElementById('portal-bg-color');
@@ -212,7 +188,7 @@ function updateDefaultPort(engine) {
 function saveSettings(containerId) {
     const portalName = document.getElementById('portal-name-input')?.value;
     const previewBoard = document.getElementById('preview-portal-icon');
-    const bannerImg = document.getElementById('banner-preview-img');
+
     
     let portalIconValue = '';
     if (currentIdentityMode === 'icon') {
@@ -226,7 +202,7 @@ function saveSettings(containerId) {
         portal_name: portalName,
         portal_identity_type: currentIdentityMode,
         portal_icon: portalIconValue,
-        portal_banner: bannerImg ? bannerImg.src : '',
+
         bg_color: document.getElementById('portal-bg-color')?.value,
         text_color: document.getElementById('portal-text-color')?.value
     };
