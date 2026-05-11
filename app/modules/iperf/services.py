@@ -207,6 +207,8 @@ class IperfService:
             "avg_jitter_ms": sum(jitters) / len(jitters),
             "total_samples": len(vals)
         }
+        # Limpiar tracking de proceso
+        IperfService._active_procs.pop(session_id, None)
 
     @staticmethod
     def start_server(user_id, port=5201):

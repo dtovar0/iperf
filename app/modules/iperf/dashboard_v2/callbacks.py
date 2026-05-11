@@ -431,6 +431,37 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
             debug_logger.error(f"control_client: {e}\n{traceback.format_exc()}")
             return (no_update,) * 3
 
+    @dash_app.callback(
+        [Output("cli-status-label", "children", allow_duplicate=True),
+         Output("cli-status-label", "className", allow_duplicate=True),
+         Output("cli-status-card",  "className", allow_duplicate=True)],
+        Input("btn-cli-stop", "n_clicks"),
+        prevent_initial_call=True,
+    )
+    def stop_client(n_clicks):
+        if not n_clicks:
+            return no_update
+        
+        stopped = False
+        # Intentar detener todos los procesos de cliente activos
+        from app.modules.iperf.services import IperfService
+        for sid in list(IperfService._active_procs.keys()):
+            proc = IperfService._active_procs.get(sid)
+            if proc:
+                try:
+                    proc.terminate()
+                    # El reader se encargará de limpiar el dict al terminar el proceso
+                    stopped = True
+                except:
+                    pass
+        
+        if stopped:
+            return ("DETENIDO", "text-[10px] font-black uppercase tracking-widest text-rose-500",
+                    "flex items-center gap-3 px-4 py-2 rounded-xl border border-rose-500/30 bg-rose-500/5")
+        
+        return ("IDLE", "text-[10px] font-black uppercase tracking-widest text-slate-400",
+                "flex items-center gap-3 px-4 py-2 rounded-xl border border-white/5 bg-white/5")
+
     # ─── MÉTRICAS CLIENTE — lee desde _live_data (el cliente no tiene log file) ─
     @dash_app.callback(
         [Output("cli-bw-chart",          "figure"),

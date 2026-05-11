@@ -12,6 +12,7 @@ retransmits = deque(maxlen=MAX_POINTS)
 log_lines  = deque(maxlen=100)
 
 lock = threading.Lock()
+client_process = None
 
 def clear_buffers():
     with lock:

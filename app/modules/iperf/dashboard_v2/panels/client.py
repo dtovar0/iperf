@@ -31,6 +31,10 @@ def get_client_panel():
                 [html.I(className="fas fa-satellite-dish mr-2"), "EJECUTAR TEST"],
                 id="btn-cli-start", className="bg-primary text-white px-6 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all"
             ),
+            html.Button(
+                [html.I(className="fas fa-stop mr-2"), "DETENER"],
+                id="btn-cli-stop", className="bg-rose-500 text-white px-6 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all"
+            ),
             html.Div(className="w-px h-8 bg-white/5 mx-2"),
             html.Div([
                 html.Label("HOST", className="block text-[8px] font-black text-label/40 mb-1"),
