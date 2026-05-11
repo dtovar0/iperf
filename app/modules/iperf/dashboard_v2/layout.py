@@ -10,5 +10,9 @@ def get_main_frame(content):
         dcc.Interval(id="interval-update", interval=2000, n_intervals=0),
         dcc.Store(id="ui-state", data={"active_tab": "server", "last_session_id": None}),
         # Store para el estado del servidor (leído por JS externo para actualizar la TopBar de Flask)
-        dcc.Store(id="srv-status-store", data={"status": "OFFLINE", "msg": "Puerto 5201 Disponible"})
+        dcc.Store(id="srv-status-store", data={"status": "OFFLINE", "msg": "Puerto 5201 Disponible"}),
+        
+        # Contenedor para notificaciones Toast Premium
+        html.Div(id="toast-container", className="fixed bottom-8 right-8 z-[9999] flex flex-col gap-3"),
+        dcc.Store(id="toast-trigger", data=None)
     ])

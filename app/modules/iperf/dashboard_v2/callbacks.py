@@ -657,3 +657,52 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
             debug_logger.error(f"update_history: {e}\n{traceback.format_exc()}")
             return [html.Tr([html.Td(f"Error: {e}", colSpan=7,
                                      className="py-10 text-center text-rose-500 font-black italic")])]
+    # ─── NOTIFICACIONES TOAST ──────────────────────────────────────────────────
+    @dash_app.callback(
+        Output("toast-container", "children"),
+        Input("interval-update", "n_intervals"),
+        State("toast-container", "children"),
+        prevent_initial_call=False,
+    )
+    def trigger_notifications(n, current_toasts):
+        try:
+            if not current_user.is_authenticated:
+                return []
+            
+            # 1. Buscar sesiones terminadas no notificadas
+            from app.modules.iperf.models import IperfSession
+            new_toasts = current_toasts if current_toasts else []
+            
+            # Limpiar notificaciones viejas (más de 3)
+            if len(new_toasts) > 3:
+                new_toasts = new_toasts[-3:]
+
+            # Buscar en IperfService._live_data sesiones que tengan summary pero no hayan sido notificadas
+            for sid, data in list(IperfService._live_data.items()):
+                if sid not in IperfService._notified_sessions:
+                    if data.get("summary"):
+                        # Sesión terminada con éxito
+                        mode = "SERVIDOR" if sid in IperfService._active_procs else "CLIENTE" # Simplificación
+                        # En realidad, si está en _live_data y tiene summary, es que terminó.
+                        # Buscamos en la DB para saber el modo real si es necesario
+                        s = IperfSession.query.get(sid)
+                        if s:
+                            label = "SERVIDOR" if s.mode == "server" else "CLIENTE"
+                            msg = f"Prueba finalizada con éxito ({s.protocol.upper()})"
+                            
+                            toast = html.Div(className="bg-surface-container/95 backdrop-blur-xl border border-white/5 rounded-2xl p-4 shadow-2xl flex items-center gap-4 animate-in slide-in-from-right duration-500", children=[
+                                html.Div(className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center", children=[
+                                    html.I(className="fas fa-check-circle text-emerald-500")
+                                ]),
+                                html.Div([
+                                    html.P(f"TEST {label} OK", className="text-[10px] font-black uppercase tracking-widest text-label/40 mb-0.5"),
+                                    html.P(msg, className="text-xs font-black text-label")
+                                ])
+                            ])
+                            new_toasts.append(toast)
+                            IperfService._notified_sessions.add(sid)
+
+            return new_toasts
+        except Exception as e:
+            debug_logger.error(f"trigger_notifications: {e}")
+            return no_update

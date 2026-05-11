@@ -13,6 +13,7 @@ class IperfService:
     _active_procs = {} # session_id -> subprocess.Popen
     _lock = threading.Lock()
     _live_data = {}    # Mantener para compatibilidad si es necesario, pero priorizar state.py
+    _notified_sessions = set() # ids de sesiones ya notificadas
     DATA_RE = re.compile(
         r'\[\s*(?P<id>\d+|SUM)\]\s+'
         r'(?P<t0>[\d.]+)-(?P<t1>[\d.]+)\s+sec\s+'
