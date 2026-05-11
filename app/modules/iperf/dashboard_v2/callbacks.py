@@ -481,7 +481,7 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
                         "ESPERANDO ACTIVACIÓN DEL MOTOR")
 
             meas     = live["measurements"][-MAX_POINTS:]
-            x        = [m.get("t1", i) for i, m in enumerate(meas)]
+            x        = [m.get("ts", str(m.get("t1", i))) for i, m in enumerate(meas)]
             y_bw     = [float(m.get("gbps",   0)) for m in meas]
             y_jitter = [float(m.get("jitter", 0)) for m in meas]
 

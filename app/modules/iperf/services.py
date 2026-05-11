@@ -171,7 +171,10 @@ class IperfService:
             jitter = float(m.group("jitter")) if m.group("jitter") else 0.0
             retx   = int(m.group("retx") or m.group("lost") or 0)
             role   = m.group("role") or ""
-            data   = {"gbps": gbps, "jitter": jitter, "retx": retx}
+            data   = {
+                "gbps": gbps, "jitter": jitter, "retx": retx,
+                "ts": time.strftime('%H:%M:%S'), "t1": t1
+            }
 
             # También guardar mediciones en _live_data para el cliente
             if current_db_session_id in IperfService._live_data:
