@@ -54,8 +54,8 @@ def get_server_panel():
 
             # COLUMNA DERECHA: KPIs + LOGS (30%)
             html.Div(className="col-span-4 flex flex-col gap-6", children=[
-                # KPI GRID (4 en una sola fila)
-                html.Div(className="grid grid-cols-4 gap-2", children=[
+                # KPI GRID (3 en una sola fila)
+                html.Div(className="grid grid-cols-3 gap-2", children=[
                     html.Div(className="bg-surface-container border border-white/5 rounded-2xl p-4 text-center", children=[
                         html.P("BW", className="text-[7px] font-black text-label/30 tracking-widest mb-1"),
                         html.H2(id="current-bw", children="0.00", className="text-xl font-black italic text-primary"),
@@ -70,11 +70,6 @@ def get_server_panel():
                         html.P("RETX", className="text-[7px] font-black text-label/30 tracking-widest mb-1"),
                         html.H2(id="stat-retx", children="0", className="text-xl font-black italic text-rose-500"),
                         html.P("pkts", className="text-[6px] font-black text-label/10 uppercase"),
-                    ]),
-                    html.Div(className="bg-surface-container border border-white/5 rounded-2xl p-4 text-center", children=[
-                        html.P("SAMPLES", className="text-[7px] font-black text-label/30 tracking-widest mb-1"),
-                        html.H2(id="stat-samples", children="0", className="text-xl font-black italic text-label"),
-                        html.P("30s", className="text-[6px] font-black text-label/10 uppercase"),
                     ]),
                 ]),
 
