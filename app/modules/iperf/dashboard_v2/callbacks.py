@@ -181,7 +181,7 @@ def _make_fig(x, y, color_rgb):
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=40, r=10, t=10, b=30),
-        xaxis=dict(showgrid=False, color="#64748b", tickfont=dict(size=9), type='category'),
+        xaxis=dict(showgrid=False, color="#64748b", tickfont=dict(size=9), type='category', dtick=5),
         yaxis=dict(gridcolor="rgba(255,255,255,0.05)", color="#64748b", zeroline=False, tickfont=dict(size=9)),
         hovermode="closest",
     )
@@ -201,7 +201,7 @@ def _make_bar_fig(x, y, color_hex):
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=40, r=10, t=10, b=30),
-        xaxis=dict(showgrid=False, color="#64748b", tickfont=dict(size=9), type='category'),
+        xaxis=dict(showgrid=False, color="#64748b", tickfont=dict(size=9), type='category', dtick=5),
         yaxis=dict(gridcolor="rgba(255,255,255,0.05)", color="#64748b", zeroline=False, tickfont=dict(size=9)),
     )
     return fig
