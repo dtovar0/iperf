@@ -76,6 +76,16 @@ class IperfService:
                         db.session.commit()
                     except Exception as e:
                         print(f"Error persisting measurement: {e}")
+            
+            # 3. Sincronización con el historial de sesión (Panel Cliente)
+            if active_sid in IperfService._live_data:
+                IperfService._live_data[active_sid]["measurements"].append({
+                    "gbps": data["gbps"], 
+                    "jitter": data["jitter"], 
+                    "retx": data["retx"],
+                    "ts": ts,
+                    "t1": data.get("t1", 0)
+                })
 
         def flush_interval(active_sid):
             if group["has_sum"]:
@@ -175,10 +185,6 @@ class IperfService:
                 "gbps": gbps, "jitter": jitter, "retx": retx,
                 "ts": time.strftime('%H:%M:%S'), "t1": t1
             }
-
-            # También guardar mediciones en _live_data para el cliente
-            if current_db_session_id in IperfService._live_data:
-                IperfService._live_data[current_db_session_id]["measurements"].append(data)
 
             if role:
                 if mode == "client" and role == "receiver": continue
