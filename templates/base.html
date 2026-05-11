@@ -71,10 +71,12 @@
                 </div>
 
                 <div class="flex items-center gap-4">
+                    {% if not request.path.startswith('/iperf/') %}
                     <div class="hidden sm:flex items-center h-12 bg-input-bg px-4 rounded-2xl gap-3 border-2 border-panel-border focus-within:border-input-focus transition-all shadow-sm group">
                         <svg class="w-4 h-4 text-label/60 group-focus-within:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         <input type="text" id="systemSearch" placeholder="Buscar..." class="bg-transparent border-none focus:ring-0 text-input text-sm font-bold w-64 outline-none placeholder:text-label/50 p-0">
                     </div>
+                    {% endif %}
 
 
                     <!-- Notifications -->

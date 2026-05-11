@@ -766,13 +766,23 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const response = await fetch('/notifications/api/active');
                 if (!response.ok) return;
+                
+                // VALIDACIÓN DE SEGURIDAD: Verificar que sea JSON
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    return; 
+                }
+
                 const data = await response.json();
                 if (data.status === 'success') {
                     allNotifications = data.notifications;
                     renderNotifications(allNotifications, data.unread_count);
                 }
             } catch (error) {
-                console.error('Notification fetch error:', error);
+                // Silencio en producción para no saturar consola con errores de sesión
+                if (window.location.hostname === 'localhost') {
+                    console.debug('Notification fetch silent error (Check session/auth)');
+                }
             }
         }
 

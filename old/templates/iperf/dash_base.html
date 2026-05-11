@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Nexus | iperf3 Dashboard{% endblock %}
+
+{% block extra_css %}
+    {{ metas | safe }}
+    {{ css | safe }}
+    {{ favicon | safe }}
+    <style>
+        /* Asegurar que el contenido ocupe todo el espacio sin scroll vertical */
+        #mainContent { 
+            height: 100vh !important; 
+            overflow: hidden !important;
+            display: flex;
+            flex-direction: column;
+        }
+        main {
+            flex: 1;
+            min-height: 0;
+            overflow: hidden !important;
+        }
+    </style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<span class="text-secondary">Nexus</span>
+<svg class="w-4 h-4 text-label/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+<span class="text-primary">iperf3 Manager</span>
+{% endblock %}
+
+{% block sidebar_nav %}
+    <p class="text-[12px] font-black text-label/40 uppercase tracking-[0.2em] px-3 mb-2 sidebar-text">Operaciones</p>
+    <hr class="sidebar-divider">
+    
+    <a href="/iperf/dashboard/server" id="tab-server"
+       class="nav-item gap-4 px-4 py-3 flex items-center rounded-xl text-primary bg-primary/5 border border-primary/10 transition-all group">
+        <i class="fas fa-server w-5 text-center mr-3"></i>
+        <span class="sidebar-text text-sm font-bold">SERVIDOR</span>
+    </a>
+    
+    <a href="/iperf/dashboard/client" id="tab-client"
+       class="nav-item gap-4 px-4 py-3 flex items-center rounded-xl text-label hover:text-primary hover:bg-primary/5 transition-all group">
+        <i class="fas fa-satellite-dish w-5 text-center mr-3"></i>
+        <span class="sidebar-text text-sm font-bold">CLIENTE</span>
+    </a>
+    
+    <a href="/iperf/dashboard/history" id="tab-history"
+       class="nav-item gap-4 px-4 py-3 flex items-center rounded-xl text-label hover:text-primary hover:bg-primary/5 transition-all group">
+        <i class="fas fa-history w-5 text-center mr-3"></i>
+        <span class="sidebar-text text-sm font-bold">HISTORIAL</span>
+    </a>
+{% endblock %}
+
+{% block content %}
+    {{ app_entry | safe }}
+    {{ config | safe }}
+    {{ scripts | safe }}
+    {{ renderer | safe }}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const links = document.querySelectorAll('#tab-server, #tab-client, #tab-history');
+        const activeClass = ['text-primary', 'bg-primary/5', 'border', 'border-primary/10'];
+        const inactiveClass = ['text-label'];
+
+        function updateActive() {
+            const path = window.location.pathname;
+            links.forEach(link => {
+                const isMatched = path.includes(link.getAttribute('href'));
+                if (isMatched) {
+                    link.classList.add(...activeClass);
+                    link.classList.remove(...inactiveClass);
+                } else {
+                    link.classList.remove(...activeClass);
+                    link.classList.add(...inactiveClass);
+                }
+            });
+        }
+
+        // Interceptar clicks para evitar recarga
+        links.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const href = this.getAttribute('href');
+                window.history.pushState({}, '', href);
+                window.dispatchEvent(new PopStateEvent('popstate'));
+                updateActive();
+            });
+        });
+
+        window.addEventListener('popstate', updateActive);
+        updateActive();
+    });
+</script>
+{% endblock %}

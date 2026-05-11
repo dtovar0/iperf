@@ -1,4 +1,4 @@
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, request
 from flask_compress import Compress
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
@@ -61,9 +61,13 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
-    # Eximir las rutas de Dash de CSRF ya que Dash maneja su propia seguridad
-    csrf.exempt("dash.dash.dispatch") 
     
+    # Bypass CSRF para Dash (necesario por el cambio de prefijo a /iperf/)
+    @app.before_request
+    def csrf_skip_dash():
+        if request.path.startswith('/iperf/_dash-'):
+            setattr(request, '_csrf_exempt', True)
+
     login_manager.login_view = 'auth.login'
     login_manager.login_message = "Por favor, inicie sesión para acceder."
     login_manager.login_message_category = "info"

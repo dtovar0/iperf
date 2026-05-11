@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+
+{% block title %}Nexus | iperf3 Network Tests{% endblock %}
+
+{% block breadcrumbs %}
+<span class="text-secondary">Nexus</span>
+<svg class="w-4 h-4 text-label/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+<span class="text-primary">iperf3 Manager</span>
+{% endblock %}
+
+{% block content %}
+<div id="iperfWrapper" class="w-full h-full flex flex-col p-6 overflow-hidden">
+    <!-- Header Title Section -->
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-black text-primary uppercase tracking-tighter italic leading-none">Monitoreo de Red</h1>
+            <p class="text-[12px] text-primary/60 font-bold tracking-[0.3em] uppercase mt-1">iperf3 Orchestration & Analysis</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <div id="serverStatusBadge" class="flex items-center gap-4 px-5 py-2.5 rounded-2xl bg-surface-container border border-panel-border shadow-xl shadow-primary/5">
+                <div class="w-3 h-3 rounded-full {% if server_running %}bg-success shadow-[0_0_15px_rgba(var(--color-success),0.5)]{% else %}bg-danger shadow-[0_0_15px_rgba(var(--color-danger),0.5)]{% endif %} animate-pulse" id="statusDot"></div>
+                <span class="text-[11px] font-black {% if server_running %}text-success{% else %}text-danger{% endif %} uppercase tracking-widest" id="statusText">
+                    {% if server_running %}Servidor Activo{% else %}Servidor Fuera de Línea{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls Row -->
+    <div class="mb-8 flex items-center justify-between bg-panel-fill border border-panel-border p-5 rounded-[2rem] shadow-2xl shadow-primary/5">
+        <div class="flex items-center gap-8 px-4">
+            <div class="flex flex-col">
+                <span class="text-[10px] font-black text-label/30 uppercase tracking-widest">Nodo Maestro</span>
+                <span class="text-sm font-bold text-label uppercase">Localhost:5201</span>
+            </div>
+            <div class="h-10 w-px bg-panel-border/50"></div>
+            <div class="flex flex-col">
+                <span class="text-[10px] font-black text-label/30 uppercase tracking-widest">Protocolo</span>
+                <span class="text-sm font-bold text-primary uppercase tracking-tighter">TCP / UDP (Dinamico)</span>
+            </div>
+        </div>
+        
+        <button onclick="handleNewTest()" id="startServerBtn" class="nexus-btn nexus-btn-primary px-12 py-4 rounded-2xl shadow-2xl shadow-primary/30 group">
+            <svg class="w-4 h-4 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            <span>Iniciar Servidor iperf3</span>
+        </button>
+    </div>
+
+    <!-- Main Grid Layout (60/40 Split) -->
+    <div class="flex-grow grid grid-cols-1 lg:grid-cols-10 gap-6 overflow-hidden min-h-0">
+        
+        <!-- Left Column: Terminal (60%) -->
+        <div class="lg:col-span-6 flex flex-col min-h-0">
+            <div class="flex-1 bg-[#030712] border border-panel-border rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl relative group">
+                <!-- Terminal Header -->
+                <div class="px-8 py-5 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="flex gap-2">
+                            <div class="w-3 h-3 rounded-full bg-danger/40"></div>
+                            <div class="w-3 h-3 rounded-full bg-peach/40"></div>
+                            <div class="w-3 h-3 rounded-full bg-success/40"></div>
+                        </div>
+                        <div class="h-4 w-px bg-white/10 mx-2"></div>
+                        <div class="flex items-center gap-3">
+                            <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <span class="text-[11px] font-black text-label/60 uppercase tracking-widest">iperf3_runtime.log</span>
+                        </div>
+                    </div>
+                    <button onclick="clearTerminal()" class="text-[10px] font-black text-label/30 hover:text-primary uppercase tracking-[0.2em] transition-all">Limpiar Consola</button>
+                </div>
+                
+                <!-- Terminal Body -->
+                <div id="terminalBody" class="flex-1 p-8 font-mono text-[13px] overflow-y-auto custom-scrollbar bg-[radial-gradient(circle_at_50%_0%,rgba(37,99,235,0.08)_0%,transparent_100%)]">
+                    <div id="logOutput" class="text-success/80 leading-relaxed whitespace-pre-wrap">
+                        <span class="text-primary/60 font-black">[SISTEMA]</span> Esperando inicialización de servicios...
+                    </div>
+                    <div id="cursor" class="inline-block w-2.5 h-5 bg-primary/40 ml-1 animate-pulse align-middle"></div>
+                </div>
+
+                <!-- Terminal Footer -->
+                <div class="px-8 py-3 border-t border-white/5 bg-white/[0.01] flex justify-between items-center">
+                    <p class="text-[10px] font-mono text-label/20 uppercase tracking-widest italic">nexus@master:~$ tail -f /var/log/iperf3.log</p>
+                    <p class="text-[10px] font-mono text-label/20 uppercase tracking-widest" id="lastUpdate">Sincronización: --:--:--</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Chart & Stats (40%) -->
+        <div class="lg:col-span-4 flex flex-col min-h-0 gap-6">
+            <!-- Chart Panel -->
+            <div class="flex-grow bg-panel-fill border border-panel-border rounded-[2.5rem] p-8 shadow-2xl shadow-primary/5 flex flex-col relative overflow-hidden">
+                <div class="flex justify-between items-center mb-8 relative z-10">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        </div>
+                        <div>
+                            <span class="block text-[11px] font-black text-label/60 uppercase tracking-widest leading-none">Throughput</span>
+                            <span class="block text-[9px] font-black text-primary uppercase tracking-tighter mt-1">Análisis de Ancho de Banda</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div id="currentBw" class="text-3xl font-black text-primary italic leading-none">0.00</div>
+                        <span class="text-[10px] font-black text-label/30 uppercase tracking-widest">Gbits/sec</span>
+                    </div>
+                </div>
+                
+                <div class="flex-1 relative min-h-0">
+                    <canvas id="bwChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Stats Panel -->
+            <div class="bg-surface-container border border-panel-border rounded-[2.5rem] p-8 shadow-xl shadow-primary/5">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-1.5 h-1.5 rounded-full bg-primary"></div>
+                    <h3 class="text-[11px] font-black text-label uppercase tracking-[0.2em]">Métricas del Servidor</h3>
+                </div>
+                <div class="grid grid-cols-2 gap-8">
+                    <div class="group">
+                        <span class="block text-[9px] font-black text-label/30 uppercase tracking-widest mb-1">Puerto de Escucha</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg font-black text-label">5201</span>
+                            <div class="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[8px] font-black uppercase">Standard</div>
+                        </div>
+                    </div>
+                    <div class="group text-right">
+                        <span class="block text-[9px] font-black text-label/30 uppercase tracking-widest mb-1">Estado de Red</span>
+                        <span class="text-lg font-black text-success uppercase italic tracking-tighter">Estable</span>
+                    </div>
+                </div>
+                
+                <div class="mt-8 pt-6 border-t border-panel-border/50 flex items-center justify-between">
+                    <div class="flex -space-x-2">
+                        <div class="w-8 h-8 rounded-full bg-primary/20 border-2 border-surface-container flex items-center justify-center text-[10px] font-black text-primary">N</div>
+                        <div class="w-8 h-8 rounded-full bg-success/20 border-2 border-surface-container flex items-center justify-center text-[10px] font-black text-success">S</div>
+                    </div>
+                    <span class="text-[10px] font-bold text-label/40 uppercase tracking-widest italic">Nexus Master Node v2.0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let logPollingInterval = null;
+    let bwChart = null;
+    const chartMaxPoints = 40;
+    const chartData = {
+        labels: Array(chartMaxPoints).fill(''),
+        datasets: [{
+            label: 'Bandwidth',
+            data: Array(chartMaxPoints).fill(0),
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.05)',
+            borderWidth: 4,
+            tension: 0.45,
+            fill: true,
+            pointRadius: 0,
+            pointHoverRadius: 6,
+            pointBackgroundColor: '#3b82f6',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
+        }]
+    };
+
+    function initChart() {
+        const ctx = document.getElementById('bwChart').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.15)');
+        gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+        
+        chartData.datasets[0].backgroundColor = gradient;
+
+        bwChart = new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        titleFont: { size: 10, weight: 'bold' },
+                        bodyFont: { size: 12, weight: 'black' },
+                        padding: 12,
+                        borderRadius: 12,
+                        displayColors: false,
+                        callbacks: {
+                            label: (context) => `${context.parsed.y.toFixed(2)} Gbits/sec`
+                        }
+                    }
+                },
+                scales: {
+                    x: { display: false },
+                    y: {
+                        beginAtZero: true,
+                        grid: { 
+                            color: 'rgba(255, 255, 255, 0.03)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.2)',
+                            font: { size: 10, weight: 'bold' },
+                            padding: 10,
+                            callback: (value) => value + 'G'
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'nearest'
+                },
+                animation: { duration: 600, easing: 'easeOutQuart' }
+            }
+        });
+    }
+
+    function parseBandwidth(logs) {
+        const lines = logs.split('\n');
+        for (let i = lines.length - 1; i >= 0; i--) {
+            const match = lines[i].match(/(\d+\.?\d*)\s+(Gbits|Mbits|Kbits|bits)\/sec/);
+            if (match) {
+                let value = parseFloat(match[1]);
+                const unit = match[2];
+                if (unit === 'Mbits') value /= 1000;
+                else if (unit === 'Kbits') value /= 1000000;
+                else if (unit === 'bits') value /= 1000000000;
+                return value;
+            }
+        }
+        return null;
+    }
+
+    function updateChart(value) {
+        if (!bwChart || value === null) return;
+        
+        chartData.datasets[0].data.push(value);
+        chartData.datasets[0].data.shift();
+        
+        const bwEl = document.getElementById('currentBw');
+        bwEl.innerText = value.toFixed(2);
+        bwEl.classList.add('scale-110', 'text-success');
+        setTimeout(() => bwEl.classList.remove('scale-110', 'text-success'), 300);
+        
+        bwChart.update('none');
+    }
+
+    function handleNewTest() {
+        const btn = document.getElementById('startServerBtn');
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-wait');
+        
+        fetch("{{ url_for('iperf.start_server') }}", {
+            method: 'POST',
+            headers: { 'X-CSRFToken': CSRF_TOKEN }
+        })
+        .then(response => response.json())
+        .then(data => {
+            appendToTerminal(`\n[SISTEMA] ${data.message}\n`);
+            updateServerUI(true);
+            startLogPolling();
+        })
+        .catch(err => {
+            appendToTerminal(`\n[ERROR] Fallo al iniciar servidor: ${err}\n`);
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'cursor-wait');
+        });
+    }
+
+    function appendToTerminal(text) {
+        const output = document.getElementById('logOutput');
+        const span = document.createElement('span');
+        span.className = 'animate-in fade-in duration-300';
+        span.innerText = text;
+        output.appendChild(span);
+        
+        const terminalBody = document.getElementById('terminalBody');
+        terminalBody.scrollTop = terminalBody.scrollHeight;
+        document.getElementById('lastUpdate').innerText = `Sincronización: ${new Date().toLocaleTimeString()}`;
+    }
+
+    function startLogPolling() {
+        if (logPollingInterval) clearInterval(logPollingInterval);
+        
+        logPollingInterval = setInterval(() => {
+            fetch("{{ url_for('iperf.server_logs') }}")
+            .then(response => response.json())
+            .then(data => {
+                if (data.logs) {
+                    const bw = parseBandwidth(data.logs);
+                    if (bw !== null) updateChart(bw);
+
+                    const output = document.getElementById('logOutput');
+                    if (output.innerText !== data.logs) {
+                        output.innerText = data.logs;
+                        const terminalBody = document.getElementById('terminalBody');
+                        terminalBody.scrollTo({ top: terminalBody.scrollHeight, behavior: 'smooth' });
+                        document.getElementById('lastUpdate').innerText = `Sincronización: ${new Date().toLocaleTimeString()}`;
+                    }
+                }
+            });
+        }, 2000);
+    }
+
+    function clearTerminal() {
+        document.getElementById('logOutput').innerHTML = '<span class="text-primary/60 font-black">[SISTEMA]</span> Consola reiniciada.\n';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initChart();
+        {% if server_running %}
+            startLogPolling();
+        {% endif %}
+    });
+
+    function updateServerUI(isRunning) {
+        const dot = document.getElementById('statusDot');
+        const text = document.getElementById('statusText');
+        
+        if (isRunning) {
+            dot.className = 'w-3 h-3 rounded-full bg-success shadow-[0_0_15px_rgba(var(--color-success),0.5)] animate-pulse';
+            text.className = 'text-[11px] font-black text-success uppercase tracking-widest';
+            text.innerText = 'Servidor Activo';
+        } else {
+            dot.className = 'w-3 h-3 rounded-full bg-danger shadow-[0_0_15px_rgba(var(--color-danger),0.5)]';
+            text.className = 'text-[11px] font-black text-danger uppercase tracking-widest';
+            text.innerText = 'Servidor Fuera de Línea';
+        }
+    }
+</script>
+{% endblock %}

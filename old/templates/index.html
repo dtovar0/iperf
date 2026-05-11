@@ -1,0 +1,416 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | {{ portal_settings.portal_name or 'Nexus' }}{% endblock %}
+
+{% block breadcrumbs %}
+<span class="text-secondary cursor-pointer hover:text-primary transition-colors" onclick="window.location.href='/'">Inicio</span>
+<svg class="w-4 h-4 text-label/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+<span class="text-primary font-bold">Dashboard Control</span>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    #dashboard-root { height: 100%; display: flex; flex-direction: column; min-height: 0; background: var(--color-bg); }
+    
+    /* Headers de Sección Nexus */
+    .nx-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.5rem 2rem 1rem;
+        flex-shrink: 0;
+    }
+    .nx-section-header__left {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .nx-section-header__rule {
+        width: 12px;
+        height: 2px;
+        background: rgb(var(--color-primary));
+        border-radius: 2px;
+    }
+    .nx-section-header__label {
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: rgb(var(--color-body-text));
+    }
+    .nx-section-header__sub {
+        font-size: 10px;
+        font-weight: 700;
+        color: rgb(var(--color-body-text) / 0.4);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* KPI Strip Dashboard */
+    .nx-kpi-strip {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1.5rem;
+        padding: 0 2rem 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .nx-kpi {
+        position: relative;
+        background: rgb(var(--color-panel-fill));
+        padding: 20px 24px 18px;
+        border: 1px solid rgb(var(--color-panel-border));
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        overflow: hidden;
+    }
+    .nx-kpi:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px -8px rgb(0 0 0 / 0.1);
+    }
+    .nx-kpi__accent {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: var(--kpi-color, rgb(var(--color-primary)));
+    }
+    .nx-kpi__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .nx-kpi__label {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: rgb(var(--color-body-text) / 0.4);
+    }
+    .nx-kpi__icon {
+        width: 24px; height: 24px;
+        border-radius: 6px;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--kpi-color-alpha, rgb(var(--color-primary) / 0.1));
+        color: var(--kpi-color, rgb(var(--color-primary)));
+    }
+    .nx-kpi__value {
+        font-size: 32px;
+        font-weight: 900;
+        color: rgb(var(--color-body-text));
+        letter-spacing: -0.04em;
+        line-height: 1;
+    }
+    .nx-kpi__footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 4px;
+    }
+    .nx-kpi__trend {
+        font-size: 9px;
+        font-weight: 700;
+        color: rgb(var(--color-body-text) / 0.3);
+    }
+    .nx-kpi__tag {
+        font-size: 8px;
+        font-weight: 900;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: rgb(var(--color-surface-container-bg));
+        color: rgb(var(--color-body-text) / 0.5);
+        text-transform: uppercase;
+        border: 1px solid rgb(var(--color-panel-border));
+        border-radius: 6px;
+    }
+
+    .chart-container-box { height: 100%; width: 100%; position: relative; flex-grow: 1; }
+    
+    .dashboard-analytics-wrap {
+        padding: 0 2rem 2rem;
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="dashboard-root" class="w-full h-full overflow-hidden flex flex-col animate-fade-in bg-panel-header/5">
+    
+    <!-- === KPI HEADER PANEL === -->
+    <header class="nx-section-header">
+        <div class="nx-section-header__left">
+            <div class="nx-section-header__rule"></div>
+            <h3 class="nx-section-header__label">Síntesis Estratégica</h3>
+        </div>
+        <span class="nx-section-header__sub">Métricas clave del ecosistema</span>
+    </header>
+
+    <div class="nx-kpi-strip">
+        <!-- Áreas -->
+        <div class="nx-kpi" style="--kpi-color: #f59e0b; --kpi-color-alpha: rgba(245, 158, 11, 0.1);">
+            <div class="nx-kpi__accent"></div>
+            <div class="nx-kpi__header">
+                <span class="nx-kpi__label">Ecosistema</span>
+                <div class="nx-kpi__icon"><i class="fas fa-network-wired text-[11px]"></i></div>
+            </div>
+            <div class="nx-kpi__value">{{ areas_count_num or 0 }}</div>
+            <div class="nx-kpi__footer">
+                <span class="nx-kpi__trend">— sin cambio</span>
+                <span class="nx-kpi__tag">Áreas</span>
+            </div>
+        </div>
+
+        <!-- Plataformas -->
+        <div class="nx-kpi" style="--kpi-color: #3b82f6; --kpi-color-alpha: rgba(59, 130, 246, 0.1);">
+            <div class="nx-kpi__accent"></div>
+            <div class="nx-kpi__header">
+                <span class="nx-kpi__label">Capacidad</span>
+                <div class="nx-kpi__icon"><i class="fas fa-layer-group text-[11px]"></i></div>
+            </div>
+            <div class="nx-kpi__value">{{ total or 0 }}</div>
+            <div class="nx-kpi__footer">
+                <span class="nx-kpi__trend">↑ periodo actual</span>
+                <span class="nx-kpi__tag">Nodos</span>
+            </div>
+        </div>
+
+        <!-- Usuarios -->
+        <div class="nx-kpi" style="--kpi-color: #10b981; --kpi-color-alpha: rgba(16, 185, 129, 0.1);">
+            <div class="nx-kpi__accent"></div>
+            <div class="nx-kpi__header">
+                <span class="nx-kpi__label">Identidades</span>
+                <div class="nx-kpi__icon"><i class="fas fa-users-viewfinder text-[11px]"></i></div>
+            </div>
+            <div class="nx-kpi__value">{{ total_users or 0 }}</div>
+            <div class="nx-kpi__footer">
+                <span class="nx-kpi__trend">Activos</span>
+                <span class="nx-kpi__tag">Usuarios</span>
+            </div>
+        </div>
+
+        <!-- Pendientes -->
+        <div class="nx-kpi" style="--kpi-color: #f43f5e; --kpi-color-alpha: rgba(244, 63, 94, 0.1);">
+            <div class="nx-kpi__accent"></div>
+            <div class="nx-kpi__header">
+                <span class="nx-kpi__label">Interacción</span>
+                <div class="nx-kpi__icon"><i class="fas fa-microchip text-[11px]"></i></div>
+            </div>
+            <div class="nx-kpi__value">{{ pending or 0 }}</div>
+            <div class="nx-kpi__footer">
+                <span class="nx-kpi__trend">— normal</span>
+                <span class="nx-kpi__tag">Fila</span>
+            </div>
+        </div>
+
+        <!-- Visitas -->
+        <div class="nx-kpi" style="--kpi-color: #8b5cf6; --kpi-color-alpha: rgba(139, 92, 246, 0.1);">
+            <div class="nx-kpi__accent"></div>
+            <div class="nx-kpi__header">
+                <span class="nx-kpi__label">Tráfico</span>
+                <div class="nx-kpi__icon"><i class="fas fa-bolt-lightning text-[11px]"></i></div>
+            </div>
+            <div class="nx-kpi__value">{{ visits_total or 0 }}</div>
+            <div class="nx-kpi__footer">
+                <span class="nx-kpi__trend">Acumulado global</span>
+                <span class="nx-kpi__tag">Impacto</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- === ANALYTICS GRID === -->
+    <header class="nx-section-header">
+        <div class="nx-section-header__left">
+            <div class="nx-section-header__rule"></div>
+            <h3 class="nx-section-header__label">Análisis Operativo</h3>
+        </div>
+        <span class="nx-section-header__sub">Métricas de demanda y eficiencia</span>
+    </header>
+
+    <div class="dashboard-analytics-wrap">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 flex-1 min-h-0">
+            
+            <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8 min-h-0">
+                <!-- Charts con diseño de panel unificado -->
+                <div class="bg-panel-fill border border-panel-border rounded-xl p-4 flex flex-col shadow-sm gap-4 overflow-hidden h-full">
+                    <header class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-primary text-[10px]"><i class="fas fa-chart-simple"></i></div>
+                        <h3 class="text-[9px] font-black text-label uppercase tracking-widest shrink-0">Densidad Plataformas</h3>
+                    </header>
+                    <div class="flex-1 chart-container-box" id="c-platform"></div>
+                </div>
+                
+                <div class="bg-panel-fill border border-panel-border rounded-xl p-4 flex flex-col shadow-sm gap-4 overflow-hidden h-full">
+                    <header class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded bg-violet-500/10 flex items-center justify-center text-violet-500 text-[10px]"><i class="fas fa-users-viewfinder"></i></div>
+                        <h3 class="text-[9px] font-black text-label uppercase tracking-widest shrink-0">Población Áreas</h3>
+                    </header>
+                    <div class="flex-1 chart-container-box" id="c-area"></div>
+                </div>
+
+                <div class="bg-panel-fill border border-panel-border rounded-xl p-4 flex flex-col shadow-sm gap-4 overflow-hidden h-full">
+                    <header class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded bg-amber-500/10 flex items-center justify-center text-amber-500 text-[10px]"><i class="fas fa-microchip"></i></div>
+                        <h3 class="text-[9px] font-black text-label uppercase tracking-widest shrink-0">Solicitudes Activas</h3>
+                    </header>
+                    <div class="flex-1 chart-container-box" id="c-pending"></div>
+                </div>
+
+                <div class="bg-panel-fill border border-panel-border rounded-xl p-4 flex flex-col shadow-sm gap-4 overflow-hidden h-full">
+                    <header class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded bg-rose-500/10 flex items-center justify-center text-rose-500 text-[10px]"><i class="fas fa-bolt-lightning"></i></div>
+                        <h3 class="text-[9px] font-black text-label uppercase tracking-widest shrink-0">Tráfico Aplicativos</h3>
+                    </header>
+                    <div class="flex-1 chart-container-box" id="c-visits"></div>
+                </div>
+            </div>
+
+            <!-- Activity Feed Premium -->
+            <div class="bg-panel-fill border border-panel-border rounded-xl flex flex-col shadow-2xl overflow-hidden min-h-0">
+                <header class="shrink-0 p-8 border-b border-panel-border bg-surface-container/20 flex items-center justify-between">
+                    <span class="text-xs font-black text-label uppercase tracking-widest">Telemetría Global</span>
+                    <button onclick="window.location.href='/audit'" class="w-10 h-10 rounded-xl bg-surface-container hover:bg-primary/20 text-label/30 hover:text-primary transition-all flex items-center justify-center">
+                        <i class="fas fa-up-right-from-square text-xs"></i>
+                    </button>
+                </header>
+                <div class="flex-1 overflow-y-auto custom-scrollbar p-8">
+                    {% if log_list %}
+                    <div class="space-y-8">
+                        {% for r in log_list %}
+                        <div class="flex gap-6 relative group">
+                            {% if not loop.last %}<div class="absolute left-[11px] top-10 bottom-[-32px] w-[2px] bg-panel-border opacity-30"></div>{% endif %}
+                            <div class="w-[24px] h-[24px] rounded-lg z-10 shrink-0 mt-1 border-4 border-panel-fill shadow-lg group-hover:scale-125 transition-transform" style="background: {{ 'rgb(var(--color-success))' if r.action == 'Alta' else 'rgb(var(--color-warning))' if r.action == 'Modificación' else 'rgb(var(--color-danger))' if r.action == 'Baja' else 'var(--color-primary)' }};"></div>
+                            <div class="flex flex-col gap-1.5 flex-1 min-w-0">
+                                <div class="flex items-center justify-between gap-4">
+                                    <span class="text-xs font-black text-primary truncate uppercase tracking-tighter">{{ r.user or 'Sistema' }}</span>
+                                    <span class="text-[9px] font-black text-label/30 uppercase shrink-0">{{ r.timestamp.strftime('%H:%M') if r.timestamp else '' }}</span>
+                                </div>
+                                <p class="text-[12px] font-bold text-label leading-none">
+                                    {{ r.action }} <span class="text-primary italic">{{ r.target or '' }}</span>
+                                </p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="flex flex-col items-center justify-center h-full p-6 text-center animate-in fade-in duration-1000 opacity-40">
+                        <div class="w-16 h-16 rounded-2xl bg-panel-border/30 flex items-center justify-center text-label/20 mb-6 ring-1 ring-white/5 shadow-inner">
+                            <i class="fas fa-satellite-dish text-3xl"></i>
+                        </div>
+                        <h4 class="text-[11px] font-black text-label uppercase tracking-widest italic">Sin Señal Activa</h4>
+                        <p class="text-[9px] text-label/30 font-bold uppercase tracking-[0.2em] mt-2 leading-relaxed">
+                            El flujo de auditoría está en espera. <br>
+                            <span class="text-primary font-black opacity-100 uppercase">Esperando Transmisión</span>
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function() {
+        const data = {
+            up: { l: {{ users_platform_labels|tojson if users_platform_labels else '[]' }}, v: {{ users_platform_values|tojson if users_platform_values else '[]' }} },
+            ua: { l: {{ users_area_labels|tojson if users_area_labels else '[]' }}, v: {{ users_area_values|tojson if users_area_values else '[]' }} },
+            pr: { l: {{ pending_platform_labels|tojson if pending_platform_labels else '[]' }}, v: {{ pending_platform_values|tojson if pending_platform_values else '[]' }} },
+            mv: { l: {{ most_visited|map(attribute='name')|list|tojson if most_visited else '[]' }}, v: {{ most_visited|map(attribute='visits')|list|tojson if most_visited else '[]' }} }
+        };
+
+        const accent = '{{ portal_settings.portal_logo_bg if (portal_settings and portal_settings.portal_logo_bg) else "#2563eb" }}';
+
+        function drawEmpty(id, metric) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.innerHTML = `
+                <div class="flex flex-col items-center justify-center h-full p-6 text-center animate-in fade-in duration-1000">
+                    <div class="w-16 h-16 rounded-2xl bg-panel-border/30 flex items-center justify-center text-label/20 mb-4 ring-1 ring-white/5 shadow-inner">
+                        <i class="fas fa-satellite-dish text-2xl"></i>
+                    </div>
+                    <h4 class="text-[11px] font-black text-label uppercase tracking-widest italic opacity-60">${metric}</h4>
+                    <p class="text-[9px] text-label/30 font-bold uppercase tracking-[0.2em] mt-2 leading-relaxed">
+                        Aún no hay registros suficientes. <br>
+                        <span class="text-primary font-black">ESPERANDO TELEMETRÍA</span>
+                    </p>
+                </div>
+            `;
+        }
+
+        const baseCfg = {
+            chart: { 
+                toolbar: { show: false }, 
+                background: 'transparent', 
+                fontFamily: 'Inter', 
+                zoom: { enabled: false },
+                theme: { mode: document.documentElement.classList.contains('dark') ? 'dark' : 'light' }
+            },
+            stroke: { curve: 'smooth', width: 4 },
+            grid: { borderColor: 'var(--color-panel-border)', strokeDashArray: 4 },
+            xaxis: {
+                axisBorder: { show: false }, axisTicks: { show: false },
+                labels: { style: { colors: 'var(--color-label-muted)', fontSize: '9px', fontWeight: 800 } }
+            },
+            yaxis: {
+                labels: { style: { colors: 'var(--color-label-muted)', fontSize: '9px', fontWeight: 800 } }
+            },
+            tooltip: { theme: 'dark' },
+            colors: ['var(--color-primary)']
+        };
+
+        function render() {
+            if (typeof ApexCharts === 'undefined') { return setTimeout(render, 100); }
+
+            if (data.up.v.length > 0 && !data.up.v.every(v => v === 0)) {
+                new ApexCharts(document.querySelector("#c-platform"), {
+                    ...baseCfg, chart: { ...baseCfg.chart, type: 'bar', height: '100%' },
+                    series: [{ name: 'Usuarios', data: data.up.v }],
+                    xaxis: { ...baseCfg.xaxis, categories: data.up.l },
+                    plotOptions: { bar: { borderRadius: 12, distributed: true, columnWidth: '35%' } },
+                    colors: [accent, '#8b5cf6', '#10b981', '#f59e0b', '#3b82f6']
+                }).render();
+            } else { drawEmpty('c-platform', 'Distribución Plataformas'); }
+
+            if (data.ua.v.length > 0 && !data.ua.v.every(v => v === 0)) {
+                new ApexCharts(document.querySelector("#c-area"), {
+                    ...baseCfg, chart: { ...baseCfg.chart, type: 'bar', height: '100%' },
+                    series: [{ name: 'Densidad', data: data.ua.v }],
+                    xaxis: { ...baseCfg.xaxis, categories: data.ua.l },
+                    plotOptions: { bar: { borderRadius: 10, horizontal: true, barHeight: '35%' } },
+                    colors: ['#8b5cf6']
+                }).render();
+            } else { drawEmpty('c-area', 'Densidad por Áreas'); }
+
+            if (data.pr.v.length > 0 && !data.pr.v.every(v => v === 0)) {
+                new ApexCharts(document.querySelector("#c-pending"), {
+                    ...baseCfg, chart: { ...baseCfg.chart, type: 'bar', height: '100%' },
+                    series: [{ name: 'Pendientes', data: data.pr.v }],
+                    xaxis: { ...baseCfg.xaxis, categories: data.pr.l },
+                    plotOptions: { bar: { borderRadius: 8, columnWidth: '35%' } },
+                    colors: ['#f59e0b']
+                }).render();
+            } else { drawEmpty('c-pending', 'Solicitudes Críticas'); }
+
+            if (data.mv.v.length > 0 && !data.mv.v.every(v => v === 0)) {
+                new ApexCharts(document.querySelector("#c-visits"), {
+                    ...baseCfg, chart: { ...baseCfg.chart, type: 'bar', height: '100%' },
+                    series: [{ name: 'Visitas', data: data.mv.v }],
+                    xaxis: { ...baseCfg.xaxis, categories: data.mv.l },
+                    plotOptions: { bar: { borderRadius: 8, columnWidth: '35%' } },
+                    colors: ['#ef4444']
+                }).render();
+            } else { drawEmpty('c-visits', 'Análisis de Tráfico'); }
+        }
+
+        render();
+    })();
+</script>
+{% endblock %}

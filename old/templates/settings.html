@@ -1,0 +1,325 @@
+{% extends 'base.html' %}
+
+{% block title %}Ajustes | Nexus Premium{% endblock %}
+
+{% block breadcrumbs %}
+<span class="text-secondary cursor-pointer hover:text-primary transition-colors" onclick="window.location.href='/'">Inicio</span>
+<svg class="w-4 h-4 text-label/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+<span class="text-primary font-bold">Ajustes</span>
+{% endblock %}
+
+{% block content %}
+<div id="settingsWrapper" class="w-full h-full flex flex-col relative p-6">
+    <!-- Luxury Tabs Navigation -->
+    <div class="relative backdrop-blur-lg transition-all duration-300 mb-2">
+        <div class="flex items-center gap-2">
+            <!-- General Tab (Active) -->
+            <button onclick="switchTab('general')" id="tab-trigger-general" 
+                class="tab-trigger w-60 relative py-3.5 flex items-center justify-center gap-3 rounded-xl text-[12px] font-black uppercase tracking-[0.25em] transition-all duration-300 z-10 text-tab-active-text bg-tab-active shadow-xl shadow-tab-active/20 active:scale-95">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+                <span>General</span>
+            </button>
+
+
+            <!-- Respaldos Tab (Standby) -->
+            <button onclick="switchTab('backups')" id="tab-trigger-backups" 
+                class="tab-trigger w-60 relative py-3.5 flex items-center justify-center gap-3 rounded-xl text-[12px] font-black uppercase tracking-[0.25em] transition-all duration-300 z-10 text-tab-inactive-text bg-tab-inactive border border-panel-border active:scale-95">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                <span>Respaldos</span>
+            </button>
+
+        </div>
+    </div>
+
+    <!-- PANEL AREA -->
+    <div class="flex-grow flex flex-col overflow-hidden">
+        
+        <!-- Tab Panel: General -->
+        <div id="tab-panel-general" class="tab-panel tab-panel-content flex-grow flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-500 rounded-2xl overflow-hidden border border-panel-border shadow-2xl shadow-primary/5">
+            <!-- PANEL HEADER -->
+            <header class="bg-panel-header border-b border-panel-border px-6 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-black tracking-tighter text-primary uppercase italic leading-none">Control de Sistema</h2>
+                        <p class="text-[12px] text-primary/60 font-bold tracking-widest uppercase mt-0.5">Gestión / Estructura</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button onclick="if(validateNexusForm('tab-panel-general')) saveSettings('tab-panel-general')" class="nexus-btn-save">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                        Guardar
+                    </button>
+                </div>
+            </header>
+
+            <!-- PANEL BODY -->
+            <main class="flex-grow p-6 overflow-hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full min-h-0">
+                    <!-- Vertical Panel A (Tokenized) -->
+                    <div class="tab-panel-inner flex flex-col h-full overflow-y-auto custom-scrollbar">
+                        <label class="block text-[12px] font-black text-label uppercase tracking-[0.2em] mb-6 px-1 text-center">Configuración de Portal</label>
+                        <!-- Form Group: Nombre del Portal -->
+                        <div class="group mb-8">
+                            <label class="block text-[12px] font-black text-label uppercase tracking-[0.2em] mb-3 px-1">Nombre del Portal</label>
+                            <div class="relative group">
+                                <svg class="w-5 h-5 absolute left-5 top-1/2 -translate-y-1/2 text-label/40 group-focus-within:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                                <input type="text" 
+                                       id="portal-name-input"
+                                       value="{{ sys_config.portal_name if sys_config else 'Nexus Core AI' }}" 
+                                       class="w-full bg-input-bg border-2 border-panel-border rounded-2xl pl-14 pr-6 py-4 text-sm font-bold text-input outline-none transition-all focus:border-input-focus focus:ring-4 focus:ring-primary/10 placeholder:text-label/40"
+                                       placeholder="Introduce el nombre del portal...">
+                            </div>
+                        </div>
+
+                        <!-- Action Group: Identidad Visual -->
+                        <div class="group">
+                            <label class="block text-[12px] font-black text-label uppercase tracking-[0.2em] mb-3 px-1">Identidad Visual</label>
+                            {% set is_image = sys_config.portal_identity_type == 'image' if sys_config else false %}
+                            <div class="flex gap-4">
+                                <button id="btn-toggle-icon" onclick="toggleIdentityMode('icon')" 
+                                    class="flex-grow py-4 {% if not is_image %}bg-button-bg text-button-text shadow-lg shadow-button-bg/20{% else %}bg-panel-fill border-2 border-button-bg/20 text-label{% endif %} rounded-2xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-7.714 2.143L11 21l-2.286-6.857L1 12l7.714-2.143L11 3z"></path></svg>
+                                    Icono
+                                </button>
+                                <button id="btn-toggle-image" onclick="toggleIdentityMode('image')" 
+                                    class="flex-grow py-4 {% if is_image %}bg-button-bg text-button-text shadow-lg shadow-button-bg/20{% else %}bg-panel-fill border-2 border-button-bg/20 text-label{% endif %} rounded-2xl text-xs font-black uppercase tracking-widest hover:border-button-bg transition-all active:scale-95 flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    Imagen
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Color Customization Group -->
+                        <div class="group mt-8">
+                            <label class="block text-[12px] font-black text-label uppercase tracking-[0.2em] mb-4 px-1">Personalización Cromática</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <!-- BG Color Picker -->
+                                <div class="bg-input-bg p-4 rounded-2xl border border-panel-border flex flex-col items-center">
+                                    <span class="text-[12px] font-bold text-primary/60 uppercase mb-3">Fondo</span>
+                                    <input type="color" id="portal-bg-color" value="{{ sys_config.bg_color if sys_config else '#0f172a' }}" class="w-full h-10 rounded-lg cursor-pointer bg-transparent border-none">
+                                </div>
+                                <!-- Text Color Picker -->
+                                <div class="bg-input-bg p-4 rounded-2xl border border-panel-border flex flex-col items-center">
+                                    <span class="text-[12px] font-bold text-primary/60 uppercase mb-3">Texto</span>
+                                    <input type="color" id="portal-text-color" value="{{ sys_config.text_color if sys_config else '#ffffff' }}" class="w-full h-10 rounded-lg cursor-pointer bg-transparent border-none">
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </div>
+
+                    <!-- Vertical Panel B (Preview Area) -->
+                    <div class="tab-panel-inner flex flex-col h-full overflow-y-auto custom-scrollbar">
+                        <label class="block text-[12px] font-black text-label uppercase tracking-[0.2em] mb-6 px-1 text-center">Identidad Visual</label>
+                        
+                        <!-- Preview Board -->
+                        <div class="flex-grow min-h-0 bg-surface-container rounded-[24px] border border-surface-container-border flex flex-col items-center justify-center p-4 shadow-xl shadow-primary/5 relative overflow-hidden">
+                            <div class="w-28 h-28 bg-input rounded-[28px] shadow-xl flex items-center justify-center relative z-10 group transition-transform hover:scale-105 border border-panel-border overflow-hidden">
+                                <div id="preview-portal-icon" 
+                                     style="{% if sys_config %}background-color: {{ sys_config.bg_color }}; color: {{ sys_config.text_color }};{% endif %}"
+                                     class="w-full h-full bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/30 transition-all overflow-hidden [&>svg]:w-11 [&>svg]:h-11 [&>img]:w-full [&>img]:h-full [&>img]:object-cover">
+                                    {% if sys_config and sys_config.portal_icon %}
+                                        {% if sys_config.portal_identity_type == 'image' %}
+                                            <img src="{{ sys_config.portal_icon }}" class="w-full h-full object-cover">
+                                        {% else %}
+                                            {{ sys_config.portal_icon | safe }}
+                                        {% endif %}
+                                    {% else %}
+                                        <svg fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M21 16.5c0 .38-.21.71-.53.88l-7.97 4.43c-.16.09-.33.14-.5.14s-.34-.05-.5-.14l-7.97-4.43c-.32-.17-.53-.5-.53-.88V7.5c0-.38.21-.71.53-.88l7.97-4.43c.16-.09.33-.14.5-.14s.34.05.5.14l7.97 4.43c.32.17.53.5.53.88v9zM12 4.15L6.04 7.5L12 10.85l5.96-3.35L12 4.15zM5 15.91l6 3.35v-6.71l-6-3.35v6.71zm14 0v-6.71l-6 3.35v6.71l6-3.35z"/>
+                                        </svg>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <p id="preview-portal-name" class="mt-4 text-label text-[12px] font-black text-center max-w-[180px] leading-tight uppercase tracking-[0.25em] transition-all">
+                                {{ sys_config.portal_name if sys_config else 'Nexus Core AI' }}
+                            </p>
+                        </div>
+
+                        <!-- Icon Picker Group -->
+                        <div id="group-icon-picker" class="mt-8">
+                            <label class="block text-[12px] font-black text-label uppercase tracking-[0.2em] mb-3 px-1">Selección de Icono</label>
+                            <div class="bg-surface-container border-2 border-surface-container-border rounded-2xl h-[120px] flex items-center justify-center shadow-sm overflow-hidden">
+                                <div class="grid grid-cols-12 w-full h-full">
+                                    <!-- Row 1: Core & System -->
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M20 7h-4V5c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28-2.48 0-4.5 2.02-4.5 4.5s2.02 4.5 4.5 4.5 4.5-2.02 4.5-4.5V7h4V3h-7z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></button>
+
+                                    <!-- Row 2: Navigation & Action -->
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M21 10.12h-6.78l2.74-2.82c-2.73-2.7-7.15-2.8-9.88-.1-2.73 2.71-2.73 7.08 0 9.79 2.73 2.71 7.15 2.71 9.88 0C18.32 15.65 19 14.08 19 12.1h2c0 2.6-1.01 5.2-3.01 7.2-4.01 4-10.42 4-14.43 0-4.01-4-4.01-10.47 0-14.47 4.01-4 10.42-4 14.43 0l2.82-2.74v6.78z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M21 19.1H3v-14h18v14zm2-16H1v18h22V3z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 13.59z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm4 8H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm10 8h-8V9h8v10zm-2-8h-4v2h4v-2zm0 4h-4v2h4v-2z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.5.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M21 16.5c0 .38-.21.71-.53.88l-7.97 4.43c-.16.09-.33.14-.5.14s-.34-.05-.5-.14l-7.97-4.43c-.32-.17-.53-.5-.53-.88V7.5c0-.38.21-.71.53-.88l7.97-4.43c.16-.09.33-.14.5-.14s.34.05.5.14l7.97 4.43c.32.17.53.5.53.88v9z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-b border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 16H7v-2h10v2zm-6.7-4L7 10.7l1.4-1.4 1.9 1.9 5.3-5.3L17 7.3 10.3 14z"/></svg></button>
+
+                                    <!-- Row 3: Data & Cloud -->
+                                    <button class="h-10 flex items-center justify-center border-r border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M21 18H3V6h18v12zM3 4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H3z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M20 18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.5 14H15v-2h-3v3H8.5V8H11v3h3V9h2.5v7z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2c-4 0-8 .5-8 4v11c0 2.2 1.8 4 4 4h8c2.2 0 4-1.8 4-4V6c0-3.5-4-4-8-4zm0 2c3.7 0 6 .3 6 2v2H6V6c0-1.7 2.3-2 6-2zm6 13c0 1.1-.9 2-2 2H8c-1.1 0-2-.9-2-2V9h12v8z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M11.5 9c0-2.21 1.79-4 4-4s4 1.79 4 4-1.79 4-4 4-4-1.79-4-4zm4 2c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM5.5 9c0-2.21 1.79-4 4-4s4 1.79 4 4-1.79 4-4 4-4-1.79-4-4zm4 2c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M18 13h-5v5c0 .55-.45 1-1 1s-1-.45-1-1v-5H6c-.55 0-1-.45-1-1s.45-1 1-1h5V6c0-.55.45-1 1-1s1 .45 1 1v5h5c.55 0 1 .45 1 1s-.45 1-1 1z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center border-r border-surface-container-border hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M22 13h-8v-2h8v2zm-2-6h-6v-2h6v2zm0 12h-6v-2h6v2zM14 13H2v-2h12v2zm-2-6H2v-2h10v2zm0 12H2v-2h10v2z"/></svg></button>
+                                    <button class="h-10 flex items-center justify-center hover:bg-icon-picker-hover transition-all text-primary/60"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Image Upload Group (Hidden by default) -->
+                        <div id="group-image-upload" class="mt-8 hidden animate-in fade-in slide-in-from-top-2 duration-300">
+                            <label class="block text-[12px] font-black text-label uppercase tracking-[0.2em] mb-3 px-1">Subir Imagen</label>
+                            <div class="relative group cursor-pointer">
+                                <input type="file" id="portal-image-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
+                                <div class="bg-surface-container border-2 border-dashed border-surface-container-border rounded-2xl h-[120px] flex flex-col items-center justify-center transition-all group-hover:border-primary group-hover:bg-primary/5">
+                                    <svg class="w-8 h-8 text-label/40 group-hover:text-primary mb-2 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    <span class="text-[12px] font-black text-label uppercase tracking-widest group-hover:text-primary transition-colors">Click o arrastra imagen</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+
+
+        <div id="tab-panel-backups" class="tab-panel tab-panel-content hidden flex-grow flex flex-col animate-in fade-in duration-500 rounded-2xl overflow-hidden border border-panel-border shadow-2xl shadow-primary/5">
+            <!-- PANEL HEADER -->
+            <header class="bg-panel-header border-b border-panel-border px-6 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-violet-600/20 flex items-center justify-center text-violet-500">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-black tracking-tighter text-primary uppercase italic leading-none">Gestión de Respaldos</h2>
+                        <p class="text-[12px] text-primary/60 font-bold tracking-widest uppercase mt-0.5">Portabilidad / Restauracion</p>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-grow p-8 overflow-y-auto custom-scrollbar">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto h-full">
+                    
+                    <!-- Export Card -->
+                    <div class="group relative bg-panel-fill border border-panel-border rounded-[32px] p-8 flex flex-col items-center justify-center text-center transition-all hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/10">
+                        <div class="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform duration-500">
+                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        </div>
+                        <h3 class="text-lg font-black text-white uppercase tracking-widest mb-3">Exportar Configuración</h3>
+                        <p class="text-[12px] text-label/60 font-medium leading-relaxed max-w-[280px] mb-8">Genera un paquete maestro con usuarios, LDAP, plantillas y ajustes del sistema para migración o respaldo de seguridad.</p>
+                        
+                        <button onclick="exportSystemConfig()" class="w-full h-14 bg-primary text-white rounded-2xl text-[12px] font-black uppercase tracking-[0.25em] shadow-xl shadow-primary/20 hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-3">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Descargar Respaldo
+                        </button>
+                    </div>
+
+                    <!-- Import Card -->
+                    <div class="group relative bg-panel-fill border border-panel-border rounded-[32px] p-8 flex flex-col items-center justify-center text-center transition-all hover:border-violet-500/50 hover:shadow-2xl hover:shadow-violet-500/10">
+                        <div class="w-20 h-20 rounded-3xl bg-violet-500/10 flex items-center justify-center text-violet-500 mb-6 group-hover:scale-110 transition-transform duration-500">
+                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                        </div>
+                        <h3 class="text-lg font-black text-white uppercase tracking-widest mb-3">Importar Configuración</h3>
+                        <p class="text-[12px] text-label/60 font-medium leading-relaxed max-w-[280px] mb-8">Carga un archivo de respaldo previo para restaurar instantáneamente toda la infraestructura del portal.</p>
+                        
+                        <!-- Drop Zone Container -->
+                        <div id="import-drop-zone" class="w-full p-8 border-2 border-dashed border-panel-border rounded-[32px] bg-surface-container/20 group hover:border-violet-500/50 hover:bg-violet-500/5 transition-all duration-300 relative cursor-pointer">
+                            <input type="file" id="importFile" accept=".zip" class="absolute inset-0 opacity-0 cursor-pointer z-20" onchange="importSystemConfig(this)">
+                            
+                            <div class="flex flex-col items-center justify-center gap-4 py-4 pointer-events-none">
+                                <div class="w-14 h-14 rounded-[20px] bg-violet-500/10 flex items-center justify-center text-violet-500 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-[12px] font-black uppercase tracking-[0.25em] text-label mb-1">Arrastra tu respaldo aquí</p>
+                                    <p class="text-[12px] font-bold uppercase tracking-widest text-label/40">O haz clic para explorar (.zip)</p>
+                                </div>
+                            </div>
+
+                            <!-- Success Overlay (Hidden) -->
+                            <div id="drop-success-overlay" class="absolute inset-0 bg-violet-600 rounded-[30px] hidden items-center justify-center animate-in fade-in zoom-in duration-300 z-30">
+                                <svg class="w-10 h-10 text-white animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </main>
+        </div>
+
+    </div>
+</div>
+
+<div id="confirmImportModal" class="nexus-modal hidden fixed inset-0 z-[100] items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onclick="closeModal('confirmImportModal')"></div>
+    <div class="relative bg-panel-fill border border-panel-border w-full max-w-lg rounded-[32px] shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden">
+        <!-- MODAL HEADER -->
+        <header class="bg-rose-500/10 border-b border-rose-500/20 px-8 py-6 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-rose-500/20 flex items-center justify-center text-rose-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            </div>
+            <div>
+                <h3 class="text-lg font-black text-rose-600 dark:text-rose-500 uppercase tracking-tighter italic">Confirmar Restauración</h3>
+                <p class="text-[12px] text-rose-500/60 font-black tracking-widest uppercase mt-0.5">Operación de Sobrescritura Detectada</p>
+            </div>
+        </header>
+
+        <!-- MODAL BODY -->
+        <div class="p-8">
+            <p class="text-xs text-label/80 font-bold leading-relaxed mb-6">Estás a punto de cargar un nuevo paquete de configuración. Esta acción <span class="text-rose-500">eliminará y reemplazará</span> todos los parámetros actuales del portal, incluyendo usuarios locales, ajustes LDAP y plantillas.</p>
+            
+            <div class="bg-surface-container/50 border border-panel-border rounded-2xl p-5 mb-8">
+                <div class="flex items-center gap-3 text-primary mb-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="text-[12px] font-black uppercase tracking-widest">Recomendación de Seguridad</span>
+                </div>
+                <p class="text-[12px] text-label/40 font-bold italic">Se sugiere descargar un respaldo del estado actual antes de proceder para garantizar un punto de retorno seguro.</p>
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="closeModal('confirmImportModal')" class="flex-grow py-4 bg-panel-fill border-2 border-panel-border text-label rounded-2xl text-[12px] font-black uppercase tracking-widest hover:border-label/40 transition-all active:scale-95">
+                    Cancelar
+                </button>
+                <button id="confirmBtnAction" class="flex-grow py-4 bg-rose-600 text-white shadow-xl shadow-rose-600/20 rounded-2xl text-[12px] font-black uppercase tracking-widest hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                    Confirmar e Importar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="settings-state" class="hidden" 
+     data-config-exists="{% if sys_config %}true{% else %}false{% endif %}"
+     data-identity-type="{{ sys_config.portal_identity_type if sys_config else 'icon' }}"
+     data-portal-icon-path="{{ sys_config.portal_icon if sys_config and sys_config.portal_identity_type == 'icon' else '' }}"></div>
+<script src="{{ url_for('core.serve_assets', filename='js/settings.js') }}"></script>
+{% endblock %}
