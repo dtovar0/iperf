@@ -261,9 +261,15 @@ class IperfService:
             # 3. Esperar a que NUESTRO proceso active el puerto
             for _ in range(10):
                 time.sleep(0.3)
-                # Si el proceso murió, es que hubo un error (probablemente Bind error)
+                # Si el proceso murió, leer el error
                 if proc.poll() is not None:
-                    return False, "El servidor iperf3 se cerró inesperadamente al arrancar."
+                    error_msg = "Error desconocido"
+                    try:
+                        # Intentamos leer la primera línea de lo que alcanzó a escupir
+                        error_msg = proc.stdout.readline().strip()
+                    except: pass
+                    return False, f"Error al arrancar iperf3: {error_msg}"
+                
                 # Si el puerto ya responde, éxito
                 if IperfService.port_is_listening(port):
                     return True, f"Servidor iniciado exitosamente en el puerto {port}."
