@@ -58,8 +58,8 @@ def get_server_panel():
 
             # COLUMNA DERECHA: KPIs + LOGS (30%)
             html.Div(className="col-span-4 flex flex-col gap-6", children=[
-                # KPI GRID (4 en una sola fila/grid compacto)
-                html.Div(className="grid grid-cols-2 gap-3", children=[
+                # KPI GRID (4 en una sola fila)
+                html.Div(className="grid grid-cols-4 gap-2", children=[
                     html.Div(className="bg-surface-container border border-white/5 rounded-2xl p-4 text-center", children=[
                         html.P("BW", className="text-[7px] font-black text-label/30 tracking-widest mb-1"),
                         html.H2(id="current-bw", children="0.00", className="text-xl font-black italic text-primary"),
