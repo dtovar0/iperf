@@ -28,12 +28,8 @@ def get_server_panel():
         # FILA 1: CONTROLES
         html.Div(className="flex items-center gap-4 p-4 bg-surface-container/50 rounded-2xl mb-6", children=[
             html.Button(
-                [html.I(className="fas fa-play mr-2"), "INICIAR"],
-                id="btn-srv-start", className="bg-primary text-white px-6 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all"
-            ),
-            html.Button(
-                [html.I(className="fas fa-stop mr-2"), "PARAR"],
-                id="btn-srv-stop", className="bg-rose-500/10 text-rose-500 border border-rose-500/20 px-6 py-3 rounded-xl font-black text-xs tracking-widest hover:bg-rose-500 hover:text-white transition-all"
+                [html.I(id="srv-toggle-icon", className="fas fa-play mr-2"), html.Span(id="srv-toggle-text", children="INICIAR")],
+                id="btn-srv-toggle", className="bg-primary text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center"
             ),
             html.Div(className="w-px h-8 bg-white/5 mx-2"),
             html.Div([

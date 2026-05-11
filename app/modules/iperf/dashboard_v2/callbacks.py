@@ -238,44 +238,49 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
         [Output("srv-status-label", "children"),
          Output("srv-status-label", "className"),
          Output("srv-status-dot",   "className"),
-         Output("srv-status-card",  "className")],
-        [Input("btn-srv-start", "n_clicks"),
-         Input("btn-srv-stop",  "n_clicks")],
-        State("srv-port", "value"),
+         Output("srv-status-card",  "className"),
+         Output("srv-toggle-text",  "children"),
+         Output("srv-toggle-icon",  "className"),
+         Output("btn-srv-toggle",   "className")],
+        Input("btn-srv-toggle", "n_clicks"),
+        [State("srv-port", "value"),
+         State("srv-toggle-text", "children")],
         prevent_initial_call=True,
     )
-    def control_server(n_start, n_stop, srv_port):
+    def toggle_server(n_clicks, srv_port, current_text):
         try:
-            ctx = callback_context
-            if not ctx.triggered:
-                return (no_update,) * 4
-            btn = ctx.triggered[0]["prop_id"].split(".")[0]
+            if not n_clicks: return (no_update,) * 7
             port = srv_port or 5201
-
-            if btn == "btn-srv-start":
+            
+            if current_text == "INICIAR":
                 ok, msg = IperfService.start_server(current_user.id, port)
                 if ok:
                     return (
                         "ACTIVO", "text-[10px] font-black uppercase tracking-widest text-emerald-500",
                         "w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]",
                         "flex items-center gap-3 px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/5",
+                        "DETENER", "fas fa-stop mr-2",
+                        "bg-rose-500 text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center"
                     )
                 return (
                     "OCUPADO", "text-[10px] font-black uppercase tracking-widest text-amber-500",
                     "w-2 h-2 rounded-full bg-amber-500",
                     "flex items-center gap-3 px-4 py-2 rounded-xl border border-amber-500/30 bg-amber-500/5",
+                    "INICIAR", "fas fa-play mr-2",
+                    "bg-primary text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center"
                 )
-
-            if btn == "btn-srv-stop":
+            else:
                 IperfService.stop_server(current_user.id)
                 return (
                     "STANDBY", "text-[10px] font-black uppercase tracking-widest text-label/40",
                     "w-2 h-2 rounded-full bg-slate-500",
                     "flex items-center gap-3 px-4 py-2 rounded-xl border border-white/5 bg-white/5",
+                    "INICIAR", "fas fa-play mr-2",
+                    "bg-primary text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center"
                 )
         except Exception as e:
-            debug_logger.error(f"control_server: {e}\n{traceback.format_exc()}")
-        return (no_update,) * 4
+            debug_logger.error(f"toggle_server: {e}\n{traceback.format_exc()}")
+            return (no_update,) * 7
 
     @dash_app.callback(
         [Output("bw-chart",            "figure"),
@@ -381,86 +386,92 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
          State("cli-proto",    "value")],
         prevent_initial_call=True,
     )
-    def control_client(n_clicks, host, port, duration, parallel, bitrate, proto):
-        try:
-            if not n_clicks:
-                return (no_update,) * 4
-            from flask import current_app
-            from app.modules.iperf.models import IperfSession
-            import subprocess, threading
-            app = current_app._get_current_object()
-
-            new_s = IperfSession(
-                mode="client", host=host, port=port,
-                protocol=proto or "tcp", duration_s=duration,
-                parallel=parallel or 1,
-                status="running", user_id=current_user.id,
-                started_at=datetime.utcnow(),
-            )
-            from app import db
-            db.session.add(new_s)
-            db.session.commit()
-            sid = new_s.id
-            IperfService._live_data[sid] = {"measurements": [], "summary": None, "logs": []}
-
-            cmd = ["iperf3", "-c", host, "-p", str(port or 5201),
-                   "-t", str(duration or 10), "-P", str(parallel or 1), 
-                   "--forceflush", "-i", "1"]
-            
-            if bitrate:
-                cmd += ["-b", str(bitrate)]
-            
-            if (proto or "tcp") == "udp":
-                cmd += ["-u"]
-                if not bitrate:
-                    cmd += ["-b", "10M"] # Default UDP bitrate if not specified
-
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT,
-                                    universal_newlines=True, bufsize=1)
-            IperfService._active_procs[sid] = proc
-            threading.Thread(
-                target=IperfService._iperf3_reader,
-                args=(proc, "client", sid, app, current_user.id),
-                daemon=True,
-            ).start()
-
-            return ("CORRIENDO", "text-[10px] font-black uppercase tracking-widest text-emerald-500",
-                    "flex items-center gap-3 px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/5")
-        except Exception as e:
-            debug_logger.error(f"control_client: {e}\n{traceback.format_exc()}")
-            return (no_update,) * 3
-
     @dash_app.callback(
-        [Output("cli-status-label", "children", allow_duplicate=True),
-         Output("cli-status-label", "className", allow_duplicate=True),
-         Output("cli-status-card",  "className", allow_duplicate=True)],
-        Input("btn-cli-stop", "n_clicks"),
+        [Output("cli-status-label", "children"),
+         Output("cli-status-label", "className"),
+         Output("cli-status-card",  "className"),
+         Output("cli-toggle-text",  "children"),
+         Output("cli-toggle-icon",  "className"),
+         Output("btn-cli-toggle",   "className")],
+        Input("btn-cli-toggle", "n_clicks"),
+        [State("cli-host",      "value"),
+         State("cli-port",      "value"),
+         State("cli-duration",  "value"),
+         State("cli-parallel",  "value"),
+         State("cli-bitrate",   "value"),
+         State("cli-proto",     "value"),
+         State("cli-toggle-text", "children")],
         prevent_initial_call=True,
     )
-    def stop_client(n_clicks):
-        if not n_clicks:
-            return no_update
-        
-        stopped = False
-        # Intentar detener todos los procesos de cliente activos
-        from app.modules.iperf.services import IperfService
-        for sid in list(IperfService._active_procs.keys()):
-            proc = IperfService._active_procs.get(sid)
-            if proc:
-                try:
-                    proc.terminate()
-                    # El reader se encargará de limpiar el dict al terminar el proceso
-                    stopped = True
-                except:
-                    pass
-        
-        if stopped:
-            return ("DETENIDO", "text-[10px] font-black uppercase tracking-widest text-rose-500",
-                    "flex items-center gap-3 px-4 py-2 rounded-xl border border-rose-500/30 bg-rose-500/5")
-        
-        return ("IDLE", "text-[10px] font-black uppercase tracking-widest text-slate-400",
-                "flex items-center gap-3 px-4 py-2 rounded-xl border border-white/5 bg-white/5")
+    def toggle_client(n_clicks, host, port, duration, parallel, bitrate, proto, current_text):
+        try:
+            if not n_clicks: return (no_update,) * 6
+            
+            if current_text == "EJECUTAR TEST":
+                from flask import current_app
+                from app.modules.iperf.models import IperfSession
+                import subprocess, threading
+                app = current_app._get_current_object()
+
+                new_s = IperfSession(
+                    mode="client", host=host, port=port,
+                    protocol=proto or "tcp", duration_s=duration,
+                    parallel=parallel or 1,
+                    status="running", user_id=current_user.id,
+                    started_at=datetime.utcnow(),
+                )
+                from app import db
+                db.session.add(new_s)
+                db.session.commit()
+                sid = new_s.id
+                IperfService._live_data[sid] = {"measurements": [], "summary": None, "logs": []}
+
+                cmd = ["iperf3", "-c", host, "-p", str(port or 5201),
+                       "-t", str(duration or 10), "-P", str(parallel or 1), 
+                       "--forceflush", "-i", "1"]
+                
+                if bitrate:
+                    cmd += ["-b", str(bitrate)]
+                
+                if (proto or "tcp") == "udp":
+                    cmd += ["-u"]
+                    if not bitrate:
+                        cmd += ["-b", "10M"]
+
+                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT,
+                                        universal_newlines=True, bufsize=1)
+                IperfService._active_procs[sid] = proc
+                threading.Thread(
+                    target=IperfService._iperf3_reader,
+                    args=(proc, "client", sid, app, current_user.id),
+                    daemon=True,
+                ).start()
+
+                return (
+                    "CORRIENDO", "text-[10px] font-black uppercase tracking-widest text-emerald-500",
+                    "flex items-center gap-3 px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/5",
+                    "DETENER", "fas fa-stop mr-2",
+                    "bg-rose-500 text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center"
+                )
+            else:
+                # Detener procesos activos
+                from app.modules.iperf.services import IperfService
+                for sid in list(IperfService._active_procs.keys()):
+                    proc = IperfService._active_procs.get(sid)
+                    if proc:
+                        try: proc.terminate()
+                        except: pass
+                
+                return (
+                    "IDLE", "text-[10px] font-black uppercase tracking-widest text-slate-400",
+                    "flex items-center gap-3 px-4 py-2 rounded-xl border border-white/5 bg-white/5",
+                    "EJECUTAR TEST", "fas fa-satellite-dish mr-2",
+                    "bg-primary text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center"
+                )
+        except Exception as e:
+            debug_logger.error(f"toggle_client: {e}\n{traceback.format_exc()}")
+            return (no_update,) * 6
 
     # ─── MÉTRICAS CLIENTE — lee desde _live_data (el cliente no tiene log file) ─
     @dash_app.callback(

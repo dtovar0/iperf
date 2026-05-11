@@ -28,12 +28,8 @@ def get_client_panel():
         # FILA 1: CONTROLES
         html.Div(className="flex items-center gap-4 p-4 bg-surface-container/50 rounded-2xl mb-6", children=[
             html.Button(
-                [html.I(className="fas fa-satellite-dish mr-2"), "EJECUTAR TEST"],
-                id="btn-cli-start", className="bg-primary text-white px-6 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all"
-            ),
-            html.Button(
-                [html.I(className="fas fa-stop mr-2"), "DETENER"],
-                id="btn-cli-stop", className="bg-rose-500 text-white px-6 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all"
+                [html.I(id="cli-toggle-icon", className="fas fa-satellite-dish mr-2"), html.Span(id="cli-toggle-text", children="EJECUTAR TEST")],
+                id="btn-cli-toggle", className="bg-primary text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center"
             ),
             html.Div(className="w-px h-8 bg-white/5 mx-2"),
             html.Div([
