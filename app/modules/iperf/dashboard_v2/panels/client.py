@@ -49,8 +49,8 @@ def get_client_panel():
                 dcc.Input(id="cli-parallel", type="number", value=1, min=1, max=128, className="bg-transparent border-none text-sm font-black text-primary w-16 outline-none")
             ]),
             html.Div([
-                html.Label("PKT SIZE (-l)", className="block text-[8px] font-black text-label/40 mb-1"),
-                dcc.Input(id="cli-length", type="text", placeholder="128K", className="bg-transparent border-none text-sm font-black text-primary w-20 outline-none")
+                html.Label("BITRATE (-b)", className="block text-[8px] font-black text-label/40 mb-1"),
+                dcc.Input(id="cli-bitrate", type="text", placeholder="200M", className="bg-transparent border-none text-sm font-black text-primary w-20 outline-none")
             ]),
             html.Div([
                 html.Label("PROTOCOLO", className="block text-[8px] font-black text-label/40 mb-1"),
