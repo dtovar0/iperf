@@ -37,7 +37,7 @@ SEP_RE      = re.compile(r'^[\s\-]+$')
 ACCEPTED_RE = re.compile(r'Accepted connection from')
 LISTEN_RE   = re.compile(r'Server listening on')
 
-MAX_POINTS = 60   # ventana deslizante de puntos visibles
+MAX_POINTS = 30   # ventana deslizante de puntos visibles
 
 
 def _to_gbps(rate, unit):

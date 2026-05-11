@@ -87,5 +87,11 @@ Cada sesión de prueba (cliente o servidor) debe persistir sus puntos de medici�
 ### Regla: REST API de Monitoreo
 El módulo iperf debe exponer una API REST protegida por un Token (`X-API-Token`) para permitir la integración con sistemas externos (Zabbix, dashboards externos). Los endpoints deben devolver la paridad de datos con el sistema de base de datos relacional (sesiones, mediciones y resúmenes).
 
+### Regla: Legibilidad de Log (iperf3)
+Para mejorar la legibilidad en sesiones de larga duración, el visor de logs del dashboard debe repetir la cabecera de las columnas (Intervalo, Bitrate, etc.) automáticamente cada 5 pasos de medición. Esta inyección debe ocurrir en tiempo real tanto para el buffer global del servidor como para el historial de sesión del cliente.
+
+### Ejemplo
+Después de 5 líneas de datos (ej. 4.00-5.00 sec), el sistema inserta nuevamente `[ ID] Interval Transfer Bitrate Retr Cwnd` antes de mostrar el siguiente intervalo (5.00-6.00 sec).
+
 ### Impacto
-Disponibilidad del servicio de pruebas, Módulo iperf, UX, Integraciones Externas.
+UX/UI Dashboard (Log Panel).

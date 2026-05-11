@@ -1,7 +1,7 @@
 from collections import deque
 import threading
 
-MAX_POINTS = 60
+MAX_POINTS = 30
 
 # Deques globales (Single Source of Truth)
 # Sincronizado con test/app.py
