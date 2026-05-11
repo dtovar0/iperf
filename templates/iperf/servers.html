@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block title %}Servidores iperf3 | {{ sys_config.portal_name if sys_config else 'Nexus' }}{% endblock %}
+
+{% block breadcrumbs %}
+<span class="text-secondary cursor-pointer hover:text-primary transition-colors" onclick="window.location.href='/'">Nexus</span>
+<svg class="w-4 h-4 text-label/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+<span class="text-secondary cursor-pointer hover:text-primary transition-colors" onclick="window.location.href='/iperf/server'">iperf3 Manager</span>
+<svg class="w-4 h-4 text-label/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+<span class="text-primary font-bold">Servidores</span>
+{% endblock %}
+
+{% block content %}<div id="serversWrapper" class="w-full h-full p-6 overflow-hidden flex flex-col">
+    <div class="flex-1 min-h-0 flex flex-col">
+        <div id="tab-panel-servers" class="tab-panel tab-panel-content flex-1 min-h-0 flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-500 rounded-xl border border-panel-border shadow-2xl shadow-primary/5 overflow-hidden">
+            
+            <!-- PANEL HEADER -->
+            <header class="flex-shrink-0 bg-panel-header border-b border-panel-border px-6 py-6 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
+                        <i class="fas fa-server text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-black tracking-tighter text-primary uppercase italic leading-none">
+                            Servidores iperf3</h2>
+                        <p class="text-[12px] text-primary/60 font-bold tracking-widest uppercase mt-0.5">Infraestructura / Nodos de Red</p>
+                    </div>
+                </div>
+            </header>
+
+            <!-- PANEL BODY -->
+            <main class="flex-1 min-h-0 flex flex-col overflow-hidden px-4 pt-3 pb-1">
+                <!-- Toolbar -->
+                <div class="flex-shrink-0 mb-3 mt-2 flex justify-between items-center gap-2">
+                    <!-- Buscador -->
+                    <div class="relative group flex-grow max-w-md">
+                        <svg class="w-4 h-4 absolute left-5 top-1/2 -translate-y-1/2 text-label/60 group-focus-within:text-primary transition-colors z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <input type="text" id="serverSearch" placeholder="Buscar por nombre, host o puerto..."
+                            class="w-full bg-input-bg border-2 border-panel-border rounded-xl pl-12 pr-5 py-3 text-sm font-bold text-input outline-none focus:border-input-focus focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-label/50">
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="flex items-center gap-2">
+                        <button id="btnEditServer" data-action="servers-edit-selected" class="nexus-btn nexus-btn-secondary !text-label !border-panel-border disabled:opacity-30 disabled:pointer-events-none" disabled>
+                            <i class="fas fa-edit"></i>
+                            <span>Modificar</span>
+                        </button>
+                        <button id="btnDeleteServer" data-action="servers-delete-selected" class="nexus-btn nexus-btn-secondary !text-rose-500 !border-rose-500/20 disabled:opacity-30 disabled:pointer-events-none" disabled>
+                            <i class="fas fa-trash-alt"></i>
+                            <span>Eliminar</span>
+                        </button>
+                        <div class="w-px h-8 bg-panel-border mx-2"></div>
+                        <button data-action="servers-open-add-modal" class="nexus-btn nexus-btn-primary">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Agregar</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TABLE -->
+                <div class="flex-1 min-h-0 flex flex-col">
+                    <div class="dt-container flex-1 min-h-0 flex flex-col">
+                        <div class="dt-layout-row dt-layout-table flex-1 min-h-0 overflow-hidden">
+                            <div class="dt-layout-cell flex-1 min-h-0 flex flex-col">
+                                <table class="w-full text-left table-fixed dataTable">
+                                    <thead class="sticky top-0 z-20">
+                                        <tr class="text-panel-header-text uppercase tracking-[0.2em] font-black text-[11px]">
+                                            <th class="w-[50px] py-4 bg-panel-header border-y border-panel-border text-center" style="border-left:3px solid transparent;">
+                                                <input type="checkbox" id="selectAllServers" data-action="servers-select-all" class="nexus-checkbox mx-auto">
+                                            </th>
+                                            <th class="w-[25%] py-4 bg-panel-header border-y border-panel-border px-5 text-left">Nombre</th>
+                                            <th class="w-[30%] py-4 bg-panel-header border-y border-panel-border px-5 text-left">Host / IP</th>
+                                            <th class="w-[25%] py-4 bg-panel-header border-y border-panel-border px-5 text-left">Token</th>
+                                            <th class="w-[120px] py-4 bg-panel-header border-y border-panel-border px-5 text-center">Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="serversTableBody">
+                                        <!-- Dinámico -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        <div id="serversPagination">
+                            <!-- Inyectado por iperf_servers.js -->
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Server -->
+<div id="addServerModal" class="nexus-modal hidden fixed inset-0 z-[110] items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="modal-panel w-full max-w-2xl">
+        <form id="addServerForm" class="flex flex-col h-full overflow-hidden">
+            <div class="p-8 border-b border-panel-border flex items-center justify-between bg-surface-container/30">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center text-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20">
+                        <i class="fas fa-server text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 id="addServerModalTitle" class="text-xl font-black text-primary uppercase tracking-tighter italic drop-shadow-sm leading-none">Registrar Servidor</h3>
+                        <p class="text-[12px] text-label/60 font-bold uppercase tracking-widest mt-1">Configuración de nodo de red</p>
+                    </div>
+                </div>
+                <button type="button" data-action="servers-close-add-modal" class="w-10 h-10 flex items-center justify-center hover:bg-rose-500/10 hover:text-rose-500 rounded-xl transition-all group">
+                    <i class="fas fa-times text-label group-hover:rotate-90 transition-transform"></i>
+                </button>
+            </div>
+
+            <div class="p-8 space-y-6">
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black text-label/60 uppercase tracking-widest ml-1">Nombre del Servidor</label>
+                        <div class="relative group">
+                            <i class="fas fa-tag absolute left-4 top-1/2 -translate-y-1/2 text-label/30 group-focus-within:text-primary transition-colors"></i>
+                            <input type="text" id="addServerName" name="name" 
+                                class="w-full h-12 bg-panel-fill/60 border-2 border-panel-border rounded-xl pl-11 pr-4 text-sm font-bold focus:border-primary outline-none transition-all" 
+                                required placeholder="Ej: Datacenter CDMX">
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black text-label/60 uppercase tracking-widest ml-1">Host / IP</label>
+                        <div class="relative group">
+                            <i class="fas fa-network-wired absolute left-4 top-1/2 -translate-y-1/2 text-label/30 group-focus-within:text-primary transition-colors"></i>
+                            <input type="text" id="addServerHost" name="host" 
+                                class="w-full h-12 bg-panel-fill/60 border-2 border-panel-border rounded-xl pl-11 pr-4 text-sm font-bold focus:border-primary outline-none transition-all" 
+                                required placeholder="192.168.1.100">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black text-label/60 uppercase tracking-widest ml-1">Estado</label>
+                        <div class="h-12 flex items-center px-4 bg-panel-fill/60 border-2 border-panel-border rounded-xl justify-between">
+                            <span id="addServerStatusText" class="text-xs font-black text-primary uppercase tracking-widest">Activo</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="addServerStatusToggle" checked class="sr-only peer js-status-toggle" data-target-id="addServerStatusText" data-on-label="Activo" data-off-label="Inactivo">
+                                <div class="w-11 h-6 bg-slate-300/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-[11px] font-black text-label/60 uppercase tracking-widest ml-1">Token de Acceso <span class="text-label/30">(Opcional)</span></label>
+                    <div class="relative group">
+                        <i class="fas fa-key absolute left-4 top-1/2 -translate-y-1/2 text-label/30 group-focus-within:text-primary transition-colors"></i>
+                        <input type="text" id="addServerToken" name="token" 
+                            class="w-full h-12 bg-panel-fill/60 border-2 border-panel-border rounded-xl pl-11 pr-14 text-sm font-bold focus:border-primary outline-none transition-all font-mono" 
+                            placeholder="Token de autenticación del servidor">
+                        <button type="button" data-action="servers-generate-token" data-target="addServerToken" class="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest hover:bg-primary/20 transition-colors">
+                            <i class="fas fa-dice mr-1"></i>Generar
+                        </button>
+                    </div>
+                    <p class="text-[10px] font-bold text-label/40 uppercase tracking-widest px-1 italic">
+                        El token se usa para autenticar conexiones remotas al servidor iperf3.
+                    </p>
+                </div>
+            </div>
+
+            <footer class="modal-footer">
+                <div class="footer-left">
+                    <button type="button" data-action="servers-close-add-modal" class="nexus-btn nexus-btn-secondary">
+                        Cancelar
+                    </button>
+                </div>
+                <div class="footer-right">
+                    <button type="button" data-action="servers-submit-new" class="nexus-btn nexus-btn-primary">
+                        <i class="fas fa-save text-sm"></i>
+                        <span>Registrar Servidor</span>
+                    </button>
+                </div>
+            </footer>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Server -->
+<div id="editServerModal" class="nexus-modal hidden fixed inset-0 z-[110] items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="modal-panel w-full max-w-2xl">
+        <form id="editServerForm" class="flex flex-col h-full overflow-hidden">
+            <input type="hidden" id="editServerId" name="id">
+            <div class="p-8 border-b border-panel-border flex items-center justify-between bg-surface-container/40">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center text-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20">
+                        <i class="fas fa-server text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-black text-primary uppercase tracking-tighter italic drop-shadow-sm leading-none">Modificar Servidor</h3>
+                        <p id="editServerNameDisplay" class="text-[11px] text-label font-bold uppercase tracking-[0.15em] mt-2 opacity-60">Cargando configuración...</p>
+                    </div>
+                </div>
+                <button type="button" data-action="servers-close-edit-modal" class="w-10 h-10 flex items-center justify-center hover:bg-rose-500/10 hover:text-rose-500 rounded-xl transition-all group">
+                    <i class="fas fa-times text-label group-hover:rotate-90 transition-transform"></i>
+                </button>
+            </div>
+
+            <div class="p-8 space-y-6">
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black text-label/60 uppercase tracking-widest ml-1">Nombre</label>
+                        <div class="relative group">
+                            <i class="fas fa-tag absolute left-4 top-1/2 -translate-y-1/2 text-label/30 group-focus-within:text-primary transition-colors"></i>
+                            <input type="text" id="editServerName" name="name" 
+                                class="w-full h-12 bg-panel-fill/60 border-2 border-panel-border rounded-xl pl-11 pr-4 text-sm font-bold focus:border-primary outline-none transition-all" 
+                                required>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black text-label/60 uppercase tracking-widest ml-1">Host / IP</label>
+                        <div class="relative group">
+                            <i class="fas fa-network-wired absolute left-4 top-1/2 -translate-y-1/2 text-label/30 group-focus-within:text-primary transition-colors"></i>
+                            <input type="text" id="editServerHost" name="host" 
+                                class="w-full h-12 bg-panel-fill/60 border-2 border-panel-border rounded-xl pl-11 pr-4 text-sm font-bold focus:border-primary outline-none transition-all" 
+                                required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black text-label/60 uppercase tracking-widest ml-1">Estado</label>
+                        <div class="h-12 flex items-center px-4 bg-panel-fill/60 border-2 border-panel-border rounded-xl justify-between">
+                            <span id="editServerStatusText" class="text-xs font-black text-primary uppercase tracking-widest">Activo</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="editServerStatusToggle" checked class="sr-only peer js-status-toggle" data-target-id="editServerStatusText" data-on-label="Activo" data-off-label="Inactivo">
+                                <div class="w-11 h-6 bg-slate-300/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-[11px] font-black text-label/60 uppercase tracking-widest ml-1">Token de Acceso</label>
+                    <div class="relative group">
+                        <i class="fas fa-key absolute left-4 top-1/2 -translate-y-1/2 text-label/30 group-focus-within:text-primary transition-colors"></i>
+                        <input type="text" id="editServerToken" name="token" 
+                            class="w-full h-12 bg-panel-fill/60 border-2 border-panel-border rounded-xl pl-11 pr-14 text-sm font-bold focus:border-primary outline-none transition-all font-mono">
+                        <button type="button" data-action="servers-generate-token" data-target="editServerToken" class="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest hover:bg-primary/20 transition-colors">
+                            <i class="fas fa-dice mr-1"></i>Generar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="modal-footer">
+                <div class="footer-left">
+                    <button type="button" data-action="servers-close-edit-modal" class="nexus-btn nexus-btn-secondary">
+                        Cancelar
+                    </button>
+                </div>
+                <div class="footer-right">
+                    <button type="button" data-action="servers-submit-edit" class="nexus-btn nexus-btn-primary">
+                        <i class="fas fa-save text-sm"></i>
+                        <span>Guardar Cambios</span>
+                    </button>
+                </div>
+            </footer>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    var allServersData = {{ servers_json | tojson | safe }};
+</script>
+<script src="{{ url_for('core.serve_assets', filename='js/iperf_servers.js') }}?v={{ range(1000, 9999) | random }}"></script>
+{% endblock %}

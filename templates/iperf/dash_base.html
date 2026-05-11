@@ -17,8 +17,7 @@
         main {
             flex: 1;
             min-height: 0;
-            overflow-y: auto !important;
-            overflow-x: hidden !important;
+            overflow: hidden !important;
         }
         ._dash-loading {
             display: none !important;
@@ -58,6 +57,15 @@
        class="nav-item gap-4 px-4 py-3 flex items-center rounded-xl text-label hover:text-primary hover:bg-primary/5 transition-all group">
         <i class="fas fa-history w-5 text-center mr-3"></i>
         <span class="sidebar-text text-sm font-bold">HISTORIAL</span>
+    </a>
+
+    <hr class="sidebar-divider my-2">
+    <p class="text-[12px] font-black text-label/40 uppercase tracking-[0.2em] px-3 mb-2 sidebar-text">Administración</p>
+
+    <a href="/iperf/servers" id="tab-servers"
+       class="nav-item gap-4 px-4 py-3 flex items-center rounded-xl text-label hover:text-primary hover:bg-primary/5 transition-all group">
+        <i class="fas fa-network-wired w-5 text-center mr-3"></i>
+        <span class="sidebar-text text-sm font-bold">SERVIDORES</span>
     </a>
 {% endblock %}
 

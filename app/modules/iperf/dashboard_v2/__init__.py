@@ -19,6 +19,11 @@ def empty_graph(small=False, color="#2563eb"):
     ))
 
 def init_dashboard(server):
+    import os
+    # Assets folder está en la raíz del proyecto, no relativo al módulo
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+    assets_path = os.path.join(project_root, 'assets')
+    
     # Inicialización limpia (siguiendo test/app.py)
     dash_app = dash.Dash(
         __name__,
@@ -26,6 +31,7 @@ def init_dashboard(server):
         routes_pathname_prefix='/iperf/',
         # Forzar rutas relativas para evitar problemas de localhost/127.0.0.1
         requests_pathname_prefix='/iperf/',
+        assets_folder=assets_path,
         update_title=None,
         suppress_callback_exceptions=True,
         external_stylesheets=[

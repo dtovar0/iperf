@@ -97,3 +97,28 @@ class IperfTest(db.Model):
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None,
             'results': json.loads(self.results_json) if self.results_json else None
         }
+
+
+class IperfServerConfig(db.Model):
+    """Configuración de servidores iperf3 remotos para pruebas de red."""
+    __tablename__ = 'iperf_server_configs'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(128), nullable=False)
+    host = db.Column(db.String(255), nullable=False)
+    token = db.Column(db.String(256), nullable=True)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'host': self.host,
+            'token': self.token or '',
+            'status': 'Activo' if self.is_active else 'Inactivo',
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None,
+            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S') if self.updated_at else None
+        }

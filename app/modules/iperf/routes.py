@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify, current_app, redirect, url_for, send_file
 from flask_login import login_required, current_user
 from app import db
-from app.modules.iperf.models import IperfTest, IperfSession, IperfMeasurement, IperfSessionSummary
+from app.modules.iperf.models import IperfTest, IperfSession, IperfMeasurement, IperfSessionSummary, IperfServerConfig
 from app.modules.iperf.services import IperfService
 from app.modules.iperf.report import generate_report
 import io
@@ -29,12 +29,9 @@ def require_api_token(f):
 @iperf_bp.route('/')
 @login_required
 def index():
+    # El dashboard de Dash ahora maneja las rutas internas (/server, /client, /history)
+    # Redirigimos a la sub-ruta por defecto (server) para evitar bucles en la raíz
     return redirect('/iperf/server')
-
-@iperf_bp.route('/history')
-@login_required
-def history():
-    return redirect('/iperf/history')
 
 @iperf_bp.route('/api/history-list')
 @login_required
@@ -240,3 +237,106 @@ def api_status():
         "server_running": IperfService.is_server_running(),
         "timestamp": datetime.now().isoformat()
     })
+
+# ── Iperf Server Config CRUD ─────────────────────────────────────────────────
+
+@iperf_bp.route('/servers')
+@login_required
+def servers_page():
+    """Página de gestión de servidores iperf3."""
+    servers = IperfServerConfig.query.order_by(IperfServerConfig.created_at.desc()).all()
+    servers_data = [s.to_dict() for s in servers]
+    return render_template('iperf/servers.html', servers_json=servers_data)
+
+@iperf_bp.route('/api/servers-list')
+@login_required
+def servers_list():
+    """API: listar todos los servidores configurados."""
+    servers = IperfServerConfig.query.order_by(IperfServerConfig.created_at.desc()).all()
+    return jsonify([s.to_dict() for s in servers])
+
+@iperf_bp.route('/api/servers-dropdown')
+@login_required
+def servers_dropdown():
+    """API: lista simplificada para el dropdown del dashboard."""
+    servers = IperfServerConfig.query.filter_by(is_active=True).order_by(IperfServerConfig.name).all()
+    options = [{"label": f"{s.name} ({s.host})", "value": s.host} for s in servers]
+    # Siempre incluir opciones por defecto
+    defaults = [
+        {"label": "0.0.0.0 (ANY)", "value": "0.0.0.0"},
+        {"label": "127.0.0.1 (LOCAL)", "value": "127.0.0.1"},
+    ]
+    return jsonify(defaults + options)
+
+@iperf_bp.route('/api/add-server', methods=['POST'])
+@login_required
+def add_server():
+    """Registrar un nuevo servidor iperf3."""
+    try:
+        data = request.get_json()
+        name = data.get('name', '').strip()
+        host = data.get('host', '').strip()
+        token = data.get('token', '').strip()
+        status_str = data.get('status', 'Activo')
+
+        if not name or not host:
+            return jsonify({"success": False, "error": "Nombre y Host son obligatorios."}), 400
+
+        if IperfServerConfig.query.filter_by(host=host).first():
+            return jsonify({"success": False, "error": f"Ya existe un servidor con host {host}."}), 409
+
+        server = IperfServerConfig(
+            name=name,
+            host=host,
+            token=token if token else None,
+            is_active=(status_str == 'Activo'),
+            created_by=current_user.id if current_user.is_authenticated else None
+        )
+        db.session.add(server)
+        db.session.commit()
+
+        return jsonify({"success": True, "server": server.to_dict()})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@iperf_bp.route('/api/edit-server/<int:server_id>', methods=['POST'])
+@login_required
+def edit_server(server_id):
+    """Modificar un servidor iperf3 existente."""
+    try:
+        server = IperfServerConfig.query.get(server_id)
+        if not server:
+            return jsonify({"success": False, "error": "Servidor no encontrado."}), 404
+
+        data = request.get_json()
+        if 'name' in data:
+            server.name = data['name'].strip()
+        if 'host' in data:
+            server.host = data['host'].strip()
+        if 'token' in data:
+            server.token = data['token'].strip() if data['token'] else None
+        if 'status' in data:
+            server.is_active = (data['status'] == 'Activo')
+
+        db.session.commit()
+        return jsonify({"success": True, "server": server.to_dict()})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@iperf_bp.route('/api/delete-server/<int:server_id>', methods=['POST'])
+@login_required
+def delete_server(server_id):
+    """Eliminar un servidor iperf3."""
+    try:
+        server = IperfServerConfig.query.get(server_id)
+        if not server:
+            return jsonify({"success": False, "error": "Servidor no encontrado."}), 404
+
+        db.session.delete(server)
+        db.session.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500

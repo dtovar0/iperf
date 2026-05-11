@@ -146,20 +146,69 @@ def _parse_log(log_path=LOG_PATH, max_points=MAX_POINTS):
     return ts, y_bw, y_jit, y_retx, raw_tail, is_active
 
 
+def _make_empty_log(msg="ESPERANDO TRANSMISIÓN..."):
+    return html.Div(className="flex flex-col items-center justify-center h-full py-20 select-none", children=[
+        html.I(className="fas fa-terminal text-8xl mb-8 text-primary/30"),
+        html.P(msg, className="text-[11px] font-black tracking-[0.5em] uppercase text-center text-slate-100")
+    ])
+
+
 # ─── Figuras ──────────────────────────────────────────────────────────────────
 def _empty_fig(label=""):
     fig = go.Figure()
+    
+    # Configuración de estilo premium sólido
+    # NOTE: Plotly no soporta CSS vars — estos hex mapean a tokens:
+    #   #64748b = --color-secondary (Slate-500)
+    #   #2563eb = --color-primary (Blue-600)
+    #   #94a3b8 = Slate-400 (muted text)
+    color = "#64748b"  # → --color-secondary
+    icon = "📊"
+    subtext = "EL SISTEMA ESTÁ LISTO PARA RECIBIR DATOS"
+    
+    if "ESCUCHANDO" in label:
+        icon = "📡"
+        color = "#2563eb"  # → --color-primary
+        subtext = "PUERTO ABIERTO • ESPERANDO TRANSMISIÓN..."
+    elif "STANDBY" in label or "SIN SEÑAL" in label:
+        icon = "💤"
+        subtext = "SISTEMA EN REPOSO • LISTO PARA MONITOREAR"
+    elif "LOGIN" in label:
+        icon = "🔒"
+        subtext = "AUTENTICACIÓN REQUERIDA"
+
     fig.update_layout(
-        autosize=True,
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        xaxis=dict(visible=False),
-        yaxis=dict(visible=False),
-        annotations=[dict(
-            text=label, xref="paper", yref="paper",
-            showarrow=False,
-            font=dict(color="#64748b", size=12),
-        )],
+        xaxis=dict(visible=False, range=[0, 1]),
+        yaxis=dict(visible=False, range=[0, 1]),
+        margin=dict(t=0, b=0, l=0, r=0),
+        annotations=[
+            # Icono Central Grande
+            dict(
+                text=icon,
+                xref="paper", yref="paper",
+                x=0.5, y=0.6,
+                showarrow=False,
+                font=dict(size=50),
+            ),
+            # Título principal (Label)
+            dict(
+                text=label.upper(),
+                xref="paper", yref="paper",
+                x=0.5, y=0.42,
+                showarrow=False,
+                font=dict(family="Outfit, sans-serif", size=15, color=color, weight=900),
+            ),
+            # Subtexto Premium Descriptivo
+            dict(
+                text=subtext,
+                xref="paper", yref="paper",
+                x=0.5, y=0.32,
+                showarrow=False,
+                font=dict(family="Outfit, sans-serif", size=10, color="#94a3b8", weight=600),  # → Slate-400 muted
+            )
+        ],
     )
     return fig
 
@@ -207,6 +256,65 @@ def _make_bar_fig(x, y, color_hex):
     return fig
 
 
+def _make_event_toast(title, msg, type="info", ts=None):
+    if ts is None: ts = time.time()
+    # Mapeo de tipos a variables CSS del Nexus Framework
+    css_var_map = {
+        "success": "success",
+        "error":   "danger",
+        "warning": "warning",
+        "info":    "primary"
+    }
+    v = css_var_map.get(type, "primary")
+    
+    icon_map = {
+        "success": "fa-check-double",
+        "error":   "fa-circle-xmark",
+        "warning": "fa-triangle-exclamation",
+        "info":    "fa-circle-info"
+    }
+    icon = icon_map.get(type, "fa-circle-info")
+    
+    return html.Div(id={"type": "event-toast", "ts": ts}, className="group relative overflow-hidden bg-surface-container/90 backdrop-blur-3xl border border-white/5 rounded-panel p-6 shadow-[0_30px_70px_rgba(0,0,0,0.6)] flex items-center gap-6 animate-in slide-in-from-right duration-700 w-[360px] hover:scale-[1.03] transition-all cursor-pointer", children=[
+        
+        # Aura de color dinámica (Premium Glow)
+        html.Div(className="absolute -right-16 -top-16 w-48 h-48 blur-[80px] rounded-full transition-all duration-1000 group-hover:blur-[100px]", 
+                 style={"backgroundColor": f"rgba(var(--color-{v}), 0.25)"}),
+        
+        # Icono con Glassmorphism y Elevación
+        html.Div(className="relative w-20 h-20 rounded-panel flex items-center justify-center flex-shrink-0 border shadow-[inset_0_2px_4px_rgba(255,255,255,0.1)] transition-transform duration-500 group-hover:rotate-6", 
+                 style={
+                     "background": f"linear-gradient(135deg, rgba(var(--color-{v}), 0.3), rgba(var(--color-{v}), 0.05))",
+                     "borderColor": f"rgba(var(--color-{v}), 0.3)"
+                 },
+                 children=[
+                    html.I(className=f"fas {icon} text-3xl", 
+                           style={"color": f"rgb(var(--color-{v}))", "filter": f"drop-shadow(0 0 12px rgba(var(--color-{v}), 0.6))"})
+                 ]),
+        
+        # Cuerpo de Texto
+        html.Div(className="relative flex-1", children=[
+            html.Div(className="flex items-center justify-between mb-2.5", children=[
+                html.P(title, className="text-[11px] font-black uppercase tracking-[0.3em] italic leading-none", 
+                       style={"color": f"rgb(var(--color-{v}))"}),
+                # Indicador de Pulso Neón
+                html.Div(className="w-2 h-2 rounded-full animate-pulse", 
+                         style={"backgroundColor": f"rgb(var(--color-{v}))", "boxShadow": f"0 0 10px rgb(var(--color-{v}))"})
+            ]),
+            html.P(msg, className="text-[15px] font-extrabold text-label leading-snug tracking-tight mb-1"),
+            html.P("HACE UN MOMENTO", className="text-[9px] font-black text-label/20 tracking-widest")
+        ]),
+
+        # Barra de tiempo premium (Progress bar)
+        html.Div(className="absolute bottom-0 left-0 h-1 w-full", 
+                 style={"backgroundColor": f"rgba(var(--color-{v}), 0.1)"},
+                 children=[
+                    html.Div(className="h-full animate-out fade-out duration-[5000ms] ease-linear", 
+                             style={"width": "100%", "backgroundColor": f"rgb(var(--color-{v}))"})
+                 ])
+    ])
+
+
 def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retransmits, log_lines, empty_graph):
 
     # ─── NAVEGACIÓN SPA ───────────────────────────────────────────────────────
@@ -241,7 +349,8 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
          Output("srv-status-card",  "className"),
          Output("srv-toggle-text",  "children"),
          Output("srv-toggle-icon",  "className"),
-         Output("btn-srv-toggle",   "className")],
+         Output("btn-srv-toggle",   "className"),
+         Output("toast-trigger",    "data", allow_duplicate=True)],
         Input("btn-srv-toggle", "n_clicks"),
         [State("srv-port", "value"),
          State("srv-toggle-text", "children")],
@@ -249,49 +358,49 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
     )
     def toggle_server(n_clicks, srv_port, current_text):
         try:
-            if not n_clicks: return (no_update,) * 7
+            if not n_clicks: return (no_update,) * 8
             port = srv_port or 5201
             
             if current_text == "INICIAR":
                 ok, msg = IperfService.start_server(current_user.id, port)
+                toast = {"title": "SERVIDOR IPERF3", "msg": msg, "type": "success" if ok else "error", "ts": time.time()}
                 if ok:
                     return (
                         "ACTIVO", "text-[10px] font-black uppercase tracking-widest text-emerald-500",
                         "w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]",
                         "flex items-center gap-3 px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/5",
                         "DETENER", "fas fa-stop mr-2",
-                        "bg-rose-500 text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center"
+                        "bg-rose-500 text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center",
+                        toast
                     )
                 return (
                     "OCUPADO", "text-[10px] font-black uppercase tracking-widest text-amber-500",
                     "w-2 h-2 rounded-full bg-amber-500",
                     "flex items-center gap-3 px-4 py-2 rounded-xl border border-amber-500/30 bg-amber-500/5",
                     "INICIAR", "fas fa-play mr-2",
-                    "bg-primary text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center"
+                    "bg-primary text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center",
+                    toast
                 )
             else:
                 IperfService.stop_server(current_user.id)
+                toast = {"title": "SERVIDOR IPERF3", "msg": "Servidor detenido manualmente.", "type": "info", "ts": time.time()}
                 return (
                     "STANDBY", "text-[10px] font-black uppercase tracking-widest text-label/40",
                     "w-2 h-2 rounded-full bg-slate-500",
                     "flex items-center gap-3 px-4 py-2 rounded-xl border border-white/5 bg-white/5",
                     "INICIAR", "fas fa-play mr-2",
-                    "bg-primary text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center"
+                    "bg-primary text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center",
+                    toast
                 )
         except Exception as e:
             debug_logger.error(f"toggle_server: {e}\n{traceback.format_exc()}")
-            return (no_update,) * 7
+            return (no_update,) * 8
 
     @dash_app.callback(
         [Output("bw-chart",            "figure"),
          Output("jitter-chart",        "figure"),
-         Output("retx-chart",          "figure"),
-         Output("current-bw",          "children"),
-         Output("stat-jitter",         "children"),
-         Output("stat-retx",           "children"),
          Output("current-bw-chart",    "children"),
          Output("stat-jitter-chart",   "children"),
-         Output("stat-retx-chart",     "children"),
          Output("log-container",       "children"),
          Output("last-update",         "children"),
          Output("modal-summary",       "className"),
@@ -304,8 +413,8 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
     def update_server(n, ui_state):
         try:
             if not current_user.is_authenticated:
-                return (_empty_fig("LOGIN"), _empty_fig("LOGIN"), _empty_fig("LOGIN"),
-                        "0.00", "0.000", "0", "0.00", "0.000", "0",
+                return (_empty_fig("LOGIN"), _empty_fig("LOGIN"),
+                        "0.00", "0.000",
                         "", datetime.now().strftime('%H:%M:%S'),
                         "hidden", "", "#")
 
@@ -331,14 +440,14 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
             report_url = f"/iperf/report/{s.id}" if s else "#"
 
             # 2. Logs
-            log_text = "\n".join(raw_lines) if raw_lines else "[NEXUS] Esperando transmisión..."
-            log_el = html.Pre(log_text, id="log-output", className="text-emerald-500/60 leading-relaxed whitespace-pre-wrap")
+            log_text = "\n".join(raw_lines)
+            log_el = html.Pre(log_text, id="log-output", className="text-emerald-400 leading-relaxed whitespace-pre-wrap") if raw_lines else _make_empty_log()
 
             # 3. Validar datos
             if not y_bw_gbps:
                 fig_label = "ESCUCHANDO..." if IperfService.is_server_running(current_user.id) else "SIN SEÑAL"
-                return (_empty_fig(fig_label), _empty_fig("STANDBY"), _empty_fig("STANDBY"),
-                        "0.00", "0.000", "0", "0.00", "0.000", "0",
+                return (_empty_fig(fig_label), _empty_fig(fig_label),
+                        "0.00", "0.000",
                         log_el, datetime.now().strftime('%H:%M:%S'),
                         "hidden", "", report_url)
 
@@ -353,23 +462,14 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
             total_retx = str(sum(y_retx))
             samples    = str(len(y_bw_gbps))
 
-            return (bw_fig, jitter_fig, retx_fig,
-                    cur_bw, cur_jit, total_retx,
-                    cur_bw, cur_jit, cur_retx,
+            return (bw_fig, jitter_fig,
+                    cur_bw, cur_jit,
                     log_el, datetime.now().strftime('%H:%M:%S'),
                     "hidden", "", report_url)
 
         except Exception as e:
             debug_logger.error(f"update_server: {e}\n{traceback.format_exc()}")
-            return (no_update,) * 14
-
-        except Exception as e:
-            debug_logger.error(f"update_server: {e}\n{traceback.format_exc()}")
-            return (no_update,) * 15
-
-        except Exception as e:
-            debug_logger.error(f"update_server: {e}\n{traceback.format_exc()}")
-            return (no_update,) * 15
+            return (no_update,) * 9
 
     # ─── CONTROL CLIENTE ──────────────────────────────────────────────────────
     @dash_app.callback(
@@ -391,7 +491,8 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
          Output("cli-status-card",  "className"),
          Output("cli-toggle-text",  "children"),
          Output("cli-toggle-icon",  "className"),
-         Output("btn-cli-toggle",   "className")],
+         Output("btn-cli-toggle",   "className"),
+         Output("toast-trigger",    "data", allow_duplicate=True)],
         Input("btn-cli-toggle", "n_clicks"),
         [State("cli-host",      "value"),
          State("cli-port",      "value"),
@@ -404,7 +505,7 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
     )
     def toggle_client(n_clicks, host, port, duration, parallel, bitrate, proto, current_text):
         try:
-            if not n_clicks: return (no_update,) * 6
+            if not n_clicks: return (no_update,) * 7
             
             if current_text == "EJECUTAR TEST":
                 from flask import current_app
@@ -447,42 +548,42 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
                     daemon=True,
                 ).start()
 
+                toast = {"title": "CLIENTE IPERF3", "msg": f"Iniciando test hacia {host}...", "type": "success", "ts": time.time()}
                 return (
                     "CORRIENDO", "text-[10px] font-black uppercase tracking-widest text-emerald-500",
                     "flex items-center gap-3 px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/5",
                     "DETENER", "fas fa-stop mr-2",
-                    "bg-rose-500 text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center"
+                    "bg-rose-500 text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center",
+                    toast
                 )
             else:
                 # Detener procesos activos
-                from app.modules.iperf.services import IperfService
                 for sid in list(IperfService._active_procs.keys()):
                     proc = IperfService._active_procs.get(sid)
                     if proc:
                         try: proc.terminate()
                         except: pass
                 
+                toast = {"title": "CLIENTE IPERF3", "msg": "Test de cliente abortado.", "type": "warning", "ts": time.time()}
                 return (
                     "IDLE", "text-[10px] font-black uppercase tracking-widest text-slate-400",
                     "flex items-center gap-3 px-4 py-2 rounded-xl border border-white/5 bg-white/5",
                     "EJECUTAR TEST", "fas fa-satellite-dish mr-2",
-                    "bg-primary text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center"
+                    "bg-primary text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center",
+                    toast
                 )
         except Exception as e:
             debug_logger.error(f"toggle_client: {e}\n{traceback.format_exc()}")
-            return (no_update,) * 6
+            return (no_update,) * 7
 
     # ─── MÉTRICAS CLIENTE — lee desde _live_data (el cliente no tiene log file) ─
     @dash_app.callback(
         [Output("cli-bw-chart",          "figure"),
          Output("cli-jitter-chart",      "figure"),
-         Output("cli-current-bw",        "children"),
-         Output("cli-stat-jitter",       "children"),
          Output("cli-current-bw-chart",  "children"),
          Output("cli-stat-jitter-chart", "children"),
          Output("cli-log-container",     "children"),
-         Output("cli-last-update",       "children"),
-         Output("cli-realtime-sub",      "children")],
+         Output("cli-last-update",       "children")],
         Input("interval-update", "n_intervals"),
         prevent_initial_call=False,
     )
@@ -490,8 +591,8 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
         try:
             if not current_user.is_authenticated:
                 return (_empty_fig("LOGIN"), _empty_fig("LOGIN"),
-                        "0.00", "0.000", "0.00", "0.000",
-                        "", datetime.now().strftime('%H:%M:%S'), "ACCESO RESTRINGIDO")
+                        "0.00", "0.000",
+                        "", datetime.now().strftime('%H:%M:%S'))
 
             # Buscar sesión de cliente más reciente con datos en _live_data
             from app.modules.iperf.models import IperfSession
@@ -512,17 +613,12 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
                     live    = d
                     break
 
-            no_data_log = html.Pre(
-                "[NEXUS] Esperando test de cliente...",
-                id="cli-log-output",
-                className="text-emerald-500/60 leading-relaxed whitespace-pre-wrap",
-            )
+            no_data_log = _make_empty_log("ESPERANDO TEST DE CLIENTE...")
 
             if not live or not live.get("measurements"):
                 return (_empty_fig("SIN SEÑAL"), _empty_fig("STANDBY"),
-                        "0.00", "0.000", "0.00", "0.000",
-                        no_data_log, datetime.now().strftime('%H:%M:%S'),
-                        "ESPERANDO ACTIVACIÓN DEL MOTOR")
+                        "0.00", "0.000",
+                        no_data_log, datetime.now().strftime('%H:%M:%S'))
 
             meas     = live["measurements"][-MAX_POINTS:]
             x        = [m.get("ts", str(m.get("t1", i))) for i, m in enumerate(meas)]
@@ -536,21 +632,44 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
 
             logs = "\n".join(live.get("logs", [])[-100:])
             log_el = html.Pre(
-                logs or "[NEXUS] Esperando telemetría...",
+                logs,
                 id="cli-log-output",
-                className="text-emerald-500/60 leading-relaxed whitespace-pre-wrap",
-            )
+                className="text-emerald-400 leading-relaxed whitespace-pre-wrap",
+            ) if logs else _make_empty_log("TEST ACTIVO • CAPTURANDO LOGS...")
             sub = (f"TRANSMISIÓN ACTIVA"
                    f" — {session.host if session else 'LOCALHOST'}"
                    f" · {len(meas)} MUESTRAS")
 
             return (bw_fig, jitter_fig,
-                    cur_bw, cur_jit, cur_bw, cur_jit,
-                    log_el, datetime.now().strftime('%H:%M:%S'), sub)
+                    cur_bw, cur_jit,
+                    log_el, datetime.now().strftime('%H:%M:%S'))
 
         except Exception as e:
             debug_logger.error(f"update_client: {e}\n{traceback.format_exc()}")
-            return (no_update,) * 9
+            return (no_update,) * 6
+
+    @dash_app.callback(
+        [Output("cli-proto", "value"),
+         Output("btn-proto-tcp", "className"),
+         Output("btn-proto-udp", "className")],
+        [Input("btn-proto-tcp", "n_clicks"),
+         Input("btn-proto-udp", "n_clicks")],
+        [State("cli-proto", "value")],
+        prevent_initial_call=False
+    )
+    def update_proto_toggle(n_tcp, n_udp, current):
+        ctx = callback_context
+        if not ctx.triggered:
+            # Initial state
+            return current, "proto-toggle-btn active", "proto-toggle-btn"
+        
+        button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+        
+        if button_id == "btn-proto-tcp":
+            return "tcp", "proto-toggle-btn active", "proto-toggle-btn"
+        else:
+            return "udp", "proto-toggle-btn", "proto-toggle-btn active"
+
 
     # ─── MODAL ────────────────────────────────────────────────────────────────
     @dash_app.callback(
@@ -670,49 +789,55 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
     # ─── NOTIFICACIONES TOAST ──────────────────────────────────────────────────
     @dash_app.callback(
         Output("toast-container", "children"),
-        Input("interval-update", "n_intervals"),
+        [Input("interval-update", "n_intervals"),
+         Input("toast-trigger",    "data")],
         State("toast-container", "children"),
         prevent_initial_call=False,
     )
-    def trigger_notifications(n, current_toasts):
+    def trigger_notifications(n, trigger_data, current_toasts):
         try:
             if not current_user.is_authenticated:
                 return []
             
-            # 1. Buscar sesiones terminadas no notificadas
             from app.modules.iperf.models import IperfSession
-            new_toasts = current_toasts if current_toasts else []
+            now = time.time()
+            new_toasts = []
             
-            # Limpiar notificaciones viejas (más de 3)
-            if len(new_toasts) > 3:
-                new_toasts = new_toasts[-3:]
+            # 1. Mantener toasts actuales que NO hayan expirado (3 segundos de vida)
+            if current_toasts:
+                for t in current_toasts:
+                    # Dash guarda el ID como un dict si se usó un dict en la creación
+                    try:
+                        t_ts = t.get("props", {}).get("id", {}).get("ts", 0)
+                        if now - t_ts < 3:
+                            new_toasts.append(t)
+                    except:
+                        continue
 
-            # Buscar en IperfService._live_data sesiones que tengan summary pero no hayan sido notificadas
+            # 2. Detectar disparador directo (Toast Trigger)
+            ctx = callback_context
+            if ctx.triggered:
+                trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+                if trigger_id == "toast-trigger" and trigger_data:
+                    new_toasts.append(_make_event_toast(
+                        trigger_data.get("title", "SISTEMA"),
+                        trigger_data.get("msg", ""),
+                        trigger_data.get("type", "info"),
+                        ts=now
+                    ))
+
+            # 3. Buscar sesiones terminadas no notificadas (Lógica de fondo)
             for sid, data in list(IperfService._live_data.items()):
                 if sid not in IperfService._notified_sessions:
                     if data.get("summary"):
-                        # Sesión terminada con éxito
-                        mode = "SERVIDOR" if sid in IperfService._active_procs else "CLIENTE" # Simplificación
-                        # En realidad, si está en _live_data y tiene summary, es que terminó.
-                        # Buscamos en la DB para saber el modo real si es necesario
                         s = IperfSession.query.get(sid)
                         if s:
                             label = "SERVIDOR" if s.mode == "server" else "CLIENTE"
                             msg = f"Prueba finalizada con éxito ({s.protocol.upper()})"
-                            
-                            toast = html.Div(className="bg-surface-container/95 backdrop-blur-xl border border-white/5 rounded-2xl p-4 shadow-2xl flex items-center gap-4 animate-in slide-in-from-right duration-500", children=[
-                                html.Div(className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center", children=[
-                                    html.I(className="fas fa-check-circle text-emerald-500")
-                                ]),
-                                html.Div([
-                                    html.P(f"TEST {label} OK", className="text-[10px] font-black uppercase tracking-widest text-label/40 mb-0.5"),
-                                    html.P(msg, className="text-xs font-black text-label")
-                                ])
-                            ])
-                            new_toasts.append(toast)
+                            new_toasts.append(_make_event_toast(f"TEST {label} OK", msg, "success", ts=now))
                             IperfService._notified_sessions.add(sid)
 
-            return new_toasts
+            return new_toasts[:3]
         except Exception as e:
             debug_logger.error(f"trigger_notifications: {e}")
-            return no_update
+            return []

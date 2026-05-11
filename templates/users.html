@@ -43,14 +43,6 @@
 
                     <!-- Botones de Acción (A la derecha como en Audit) -->
                     <div class="flex items-center gap-2">
-                        <button id="btnAreasUser" data-action="users-open-areas" class="nexus-btn nexus-btn-secondary !text-violet-400 !border-violet-500/30 disabled:opacity-30 disabled:grayscale disabled:pointer-events-none" disabled>
-                            <i class="fas fa-sitemap"></i>
-                            <span>Áreas</span>
-                        </button>
-                        <button id="btnAccessUser" data-action="users-open-access" class="nexus-btn nexus-btn-secondary disabled:opacity-30 disabled:grayscale disabled:pointer-events-none" disabled>
-                            <i class="fas fa-key"></i>
-                            <span>Accesos</span>
-                        </button>
                         <button id="btnEditUser" data-action="users-edit-selected" class="nexus-btn nexus-btn-secondary !text-label !border-panel-border disabled:opacity-30 disabled:pointer-events-none" disabled>
                             <i class="fas fa-edit"></i>
                             <span>Modificar</span>
@@ -80,13 +72,11 @@
                                 <th class="w-[50px] py-4 bg-panel-header border-y border-panel-border text-center" style="border-left:3px solid transparent;">
                                      <input type="checkbox" id="selectAllUsers" data-action="users-select-all" class="nexus-checkbox mx-auto">
                                 </th>
-                                <th class="w-[20%] py-4 bg-panel-header border-y border-panel-border px-5 text-left">Nombre</th>
-                                <th class="w-[25%] py-4 bg-panel-header border-y border-panel-border px-5 text-left">Correo Electrónico</th>
-                                <th class="w-[110px] py-4 bg-panel-header border-y border-panel-border px-5 text-center">Rol</th>
-                                <th class="w-[100px] py-4 bg-panel-header border-y border-panel-border px-5 text-center">Origen</th>
-                                <th class="w-[120px] py-4 bg-panel-header border-y border-panel-border px-5 text-center">Acceso</th>
-                                <th class="w-[18%] py-4 bg-panel-header border-y border-panel-border px-5 text-left">Áreas de Trabajo</th>
-                                <th class="w-[100px] py-4 bg-panel-header border-y border-panel-border px-5 text-center">Estado</th>
+                                <th class="w-[30%] py-4 bg-panel-header border-y border-panel-border px-5 text-left">Nombre</th>
+                                <th class="w-[40%] py-4 bg-panel-header border-y border-panel-border px-5 text-left">Correo Electrónico</th>
+                                <th class="w-[120px] py-4 bg-panel-header border-y border-panel-border px-5 text-center">Rol</th>
+                                <th class="w-[120px] py-4 bg-panel-header border-y border-panel-border px-5 text-center">Origen</th>
+                                <th class="w-[120px] py-4 bg-panel-header border-y border-panel-border px-5 text-center">Estado</th>
                             </tr>
                         </thead>
                         <tbody id="usersTableBody">
@@ -209,14 +199,6 @@
                     <h3 id="addUserModalTitle" class="text-xl font-black text-primary uppercase tracking-tighter italic drop-shadow-sm">Registrar Usuario</h3>
                     <p class="text-[12px] text-label/60 font-bold uppercase tracking-widest mt-1">Configuración de perfil y ecosistema</p>
                 </div>
-                <!-- Step Indicators -->
-                <div class="flex items-center gap-4 bg-surface-container/40 p-2 rounded-2xl border border-panel-border">
-                    <div id="addUserStep1_pill" class="w-3 h-3 rounded-full bg-primary ring-4 ring-primary/20 transition-all duration-500 shadow-[0_0_15px_rgba(var(--color-primary),0.4)]"></div>
-                    <div class="w-12 h-1 bg-panel-border rounded-full overflow-hidden">
-                        <div id="addUserStepProgress" class="h-full bg-primary w-0 transition-all duration-700"></div>
-                    </div>
-                    <div id="addUserStep2_pill" class="w-3 h-3 rounded-full bg-panel-border transition-all duration-500"></div>
-                </div>
             </div>
 
             <div class="p-8 flex-grow overflow-y-auto custom-scrollbar">
@@ -290,46 +272,6 @@
                             </div>
                         </div>
                     </div>
-                    
-
-                </div>
-
-                <!-- Step 2: Areas Picklist -->
-                <div id="addUserStep2" class="hidden space-y-4">
-                    <div class="flex items-center justify-between mb-2">
-                        <label class="text-[11px] font-black text-label/60 uppercase tracking-widest ml-1">Vincular Áreas de Trabajo</label>
-                        <span id="areaCount" class="px-2 py-0.5 bg-primary/10 text-primary rounded-md text-[10px] font-black">0 SELECCIONADAS</span>
-                    </div>
-                    
-                    <div class="flex gap-4 h-[400px]">
-                        <!-- Available -->
-                        <div class="flex-1 flex flex-col border border-panel-border rounded-xl bg-slate-50/30 overflow-hidden">
-                            <div class="p-4 border-b border-panel-border flex items-center justify-between bg-slate-100/50">
-                                <span class="text-[11px] font-black text-slate-700 uppercase tracking-widest">Disponibles</span>
-                                <i class="fas fa-filter text-slate-400 text-xs"></i>
-                            </div>
-                            <div id="addUserAvailableList" class="flex-grow overflow-y-auto custom-scrollbar p-4">
-                                <!-- Cards -->
-                            </div>
-                        </div>
-                        
-                        <!-- Separator -->
-                        <div class="flex flex-col items-center justify-center text-label/20">
-                            <i class="fas fa-exchange-alt"></i>
-                        </div>
-                        
-                        <!-- Selected -->
-                        <div class="flex-1 flex flex-col border border-panel-border rounded-xl bg-slate-50/30 overflow-hidden">
-                            <div class="p-4 border-b border-panel-border flex items-center justify-between bg-slate-100/50">
-                                <span class="text-[11px] font-black text-slate-700 uppercase tracking-widest">Asignadas</span>
-                                <i class="fas fa-check-double text-slate-400 text-xs"></i>
-                            </div>
-                            <div id="addUserSelectedList" class="flex-grow overflow-y-auto custom-scrollbar p-4 bg-primary/[0.02]">
-                                <!-- Selected Cards -->
-                            </div>
-                        </div>
-                    </div>
-                    <input type="hidden" name="areas" id="selectedUserAreasInput">
                 </div>
             </div>
 
@@ -338,86 +280,14 @@
                     <button type="button" id="btnAddUserCancel" data-action="users-close-add-modal" class="nexus-btn nexus-btn-secondary">
                         Cancelar
                     </button>
-                    <button type="button" id="btnAddUserBack" data-action="users-step-back" class="nexus-btn nexus-btn-secondary hidden">
-                        <i class="fas fa-arrow-left"></i> <span>Anterior</span>
-                    </button>
                 </div>
                 <div class="footer-right">
-                    <button type="button" id="btnAddUserNext" data-action="users-step-next" class="nexus-btn nexus-btn-primary">
-                        <span>Siguiente</span> <i class="fas fa-arrow-right"></i>
-                    </button>
-                    <button type="submit" id="btnAddUserSubmit" data-action="users-submit-new" class="nexus-btn nexus-btn-primary !bg-emerald-500 shadow-emerald-500/20 hidden">
+                    <button type="submit" id="btnAddUserSubmit" data-action="users-submit-new" class="nexus-btn nexus-btn-primary !bg-emerald-500 shadow-emerald-500/20">
                          <i class="fas fa-check"></i> <span>Finalizar</span>
                     </button>
                 </div>
             </footer>
         </form>
-    </div>
-</div>
-
-<!-- Modal: User Platform Access -->
-<div id="userAccessModal" class="nexus-modal hidden fixed inset-0 z-[110] items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-    <div class="modal-panel w-full max-w-4xl">
-        <div class="p-8 border-b border-panel-border flex items-center justify-between bg-surface-container/30">
-            <div>
-                <h3 class="text-xl font-black text-primary uppercase tracking-tighter italic drop-shadow-sm">Gestionar Accesos</h3>
-                <p id="accessUserName" class="text-[12px] text-label/60 font-bold uppercase tracking-widest mt-1">Autorización táctica de plataformas</p>
-            </div>
-            <button data-action="users-close-access-modal" class="w-10 h-10 flex items-center justify-center hover:bg-rose-500/10 hover:text-rose-500 rounded-xl transition-all group">
-                <i class="fas fa-times text-label group-hover:rotate-90 transition-transform"></i>
-            </button>
-        </div>
-        <div class="p-8">
-            <div class="flex gap-4 h-[400px]">
-                <!-- Platforms Available -->
-                <div class="flex-1 flex flex-col border border-panel-border rounded-xl bg-surface-container/20 overflow-hidden">
-                    <div class="p-3 border-b border-panel-border flex items-center justify-between bg-surface-container/40">
-                        <span class="text-[10px] font-black text-label uppercase tracking-widest">Disponibles</span>
-                        <div class="flex items-center gap-2">
-                             <div class="w-1.5 h-1.5 rounded-full bg-label/20"></div>
-                             <span class="text-[10px] font-bold text-label/30">PENDIENTES</span>
-                        </div>
-                    </div>
-                    <div id="accessAvailableList" class="flex-grow overflow-y-auto custom-scrollbar p-3 space-y-2">
-                        <!-- Platform Cards -->
-                    </div>
-                </div>
-                
-                <div class="flex items-center justify-center px-2">
-                    <div class="w-10 h-10 rounded-full bg-panel-border flex items-center justify-center text-label/20 shadow-sm">
-                        <i class="fas fa-exchange-alt"></i>
-                    </div>
-                </div>
-
-                <!-- Platforms Selected -->
-                <div class="flex-1 flex flex-col border border-panel-border rounded-xl bg-surface-container/20 overflow-hidden">
-                    <div class="p-3 border-b border-panel-border flex items-center justify-between bg-primary/5">
-                        <span class="text-[10px] font-black text-primary uppercase tracking-widest">Con Acceso</span>
-                        <div class="flex items-center gap-2">
-                             <div class="w-1.5 h-1.5 rounded-full bg-primary/60"></div>
-                             <span class="text-[10px] font-bold text-primary/60">AUTORIZADO</span>
-                        </div>
-                    </div>
-                    <div id="accessSelectedList" class="flex-grow overflow-y-auto custom-scrollbar p-3 space-y-2 bg-primary/5">
-                        <!-- Platform Cards -->
-                    </div>
-                </div>
-            </div>
-            <input type="hidden" id="selectedUserPlatformsInput">
-        </div>
-        <footer class="modal-footer">
-            <div class="footer-left">
-                <button type="button" data-action="users-close-access-modal" class="nexus-btn nexus-btn-secondary">
-                    Cancelar
-                </button>
-            </div>
-            <div class="footer-right">
-                <button type="button" data-action="users-save-access" class="nexus-btn nexus-btn-primary">
-                    <i class="fas fa-save"></i>
-                    <span>Aplicar Cambios</span>
-                </button>
-            </div>
-        </footer>
     </div>
 </div>
 
@@ -490,10 +360,6 @@
                         </div>
                     </div>
                 </div>
-
-                <p class="text-[10px] font-bold text-label/40 uppercase tracking-widest px-1 text-center italic">
-                    La modificación del perfil base no afectará sus permisos de plataforma ni sus áreas asignadas.
-                </p>
             </div>
 
             <footer class="modal-footer">
@@ -513,73 +379,6 @@
     </div>
 </div>
 
-<!-- Modal: User Area Assignment -->
-<div id="userAreasModal" class="nexus-modal hidden fixed inset-0 z-[110] items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-    <div class="modal-panel w-full max-w-4xl">
-        <div class="p-8 border-b border-panel-border flex items-center justify-between bg-surface-container/30">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-violet-500/20 flex items-center justify-center text-violet-400 shadow-lg shadow-violet-500/10 ring-1 ring-violet-500/20">
-                    <i class="fas fa-sitemap text-xl"></i>
-                </div>
-                <div>
-                    <h3 class="text-xl font-black text-violet-400 uppercase tracking-tighter italic drop-shadow-sm leading-none">Gestionar Áreas</h3>
-                    <p id="areasUserName" class="text-[11px] text-label font-bold uppercase tracking-[0.15em] mt-2 opacity-60">Vínculo Estructural de Trabajo</p>
-                </div>
-            </div>
-            <button data-action="users-close-areas-modal" class="w-10 h-10 flex items-center justify-center hover:bg-rose-500/10 hover:text-rose-500 rounded-xl transition-all group">
-                <i class="fas fa-times text-label group-hover:rotate-90 transition-transform"></i>
-            </button>
-        </div>
-        
-        <div class="p-8">
-            <div class="flex gap-6 h-[400px]">
-                <!-- Areas Available -->
-                <div class="flex-1 flex flex-col border border-panel-border rounded-xl bg-surface-container/20 overflow-hidden">
-                    <div class="p-3 border-b border-panel-border flex items-center justify-between bg-surface-container/40">
-                        <span class="text-[10px] font-black text-label uppercase tracking-widest">Disponibles</span>
-                        <i class="fas fa-filter text-label/20 text-xs"></i>
-                    </div>
-                    <div id="areasAvailableList" class="flex-grow overflow-y-auto custom-scrollbar p-3 space-y-2">
-                        <!-- Area Cards -->
-                    </div>
-                </div>
-                
-                <div class="flex flex-col items-center justify-center">
-                    <div class="w-10 h-10 rounded-xl bg-panel-border flex items-center justify-center text-label/20 shadow-sm mb-2">
-                        <i class="fas fa-exchange-alt"></i>
-                    </div>
-                </div>
-
-                <!-- Areas Selected -->
-                <div class="flex-1 flex flex-col border border-panel-border rounded-xl bg-surface-container/20 overflow-hidden ring-1 ring-violet-500/20">
-                    <div class="p-3 border-b border-panel-border flex items-center justify-between bg-violet-500/5">
-                        <span class="text-[10px] font-black text-violet-400 uppercase tracking-widest">Asignadas</span>
-                        <i class="fas fa-check-double text-violet-400/40 text-xs"></i>
-                    </div>
-                    <div id="areasSelectedList" class="flex-grow overflow-y-auto custom-scrollbar p-3 space-y-2 bg-violet-500/5">
-                        <!-- Area Cards -->
-                    </div>
-                </div>
-            </div>
-            <input type="hidden" id="selectedManagementAreasInput">
-        </div>
-
-        <footer class="modal-footer">
-            <div class="footer-left">
-                <button type="button" data-action="users-close-areas-modal" class="nexus-btn nexus-btn-secondary">
-                    Cancelar
-                </button>
-            </div>
-            <div class="footer-right">
-                <button type="button" data-action="users-save-areas" class="nexus-btn nexus-btn-primary !bg-violet-500 shadow-violet-500/20">
-                    <i class="fas fa-save"></i>
-                    <span>Actualizar Áreas</span>
-                </button>
-            </div>
-        </footer>
-    </div>
-</div>
-
 {% endblock %}
 
 {% block scripts %}
@@ -587,7 +386,6 @@
 <script>
     // Inyectar datos desde el servidor a JS
     var allUsersData = {{ users_json | tojson | safe }};
-    window.__areaData = {{ all_areas_json | tojson | safe }};
 </script>
 <script src="{{ url_for('core.serve_assets', filename='js/users.js') }}?v={{ range(1000, 9999) | random }}"></script>
 {% endblock %}

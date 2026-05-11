@@ -506,7 +506,7 @@ html:not(.dark) .modal-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.5rem 2rem 1rem;
+    padding: 1rem 0 0.5rem;
     flex-shrink: 0;
 }
 .nx-section-header__left {

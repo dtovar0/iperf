@@ -133,3 +133,56 @@ Para garantizar una experiencia de control robusta y evitar acciones accidentale
 - **Clic para Seleccionar**: Al hacer clic en cualquier parte de una fila de la tabla, el sistema debe conmutar la selección de dicha fila (marcar/desmarcar checkbox y resaltar fondo).
 - **No Clic para Editar**: Se prohíbe que el clic simple en una fila abra directamente un modal de edición. El flujo oficial debe ser: **Seleccionar → Visualizar botón habilitado → Click en botón de acción**.
 - **Retroalimentación Visual**: Las filas seleccionadas deben usar la clase `.bg-primary/5` y mostrar el indicador lateral de color de la marca para confirmar la selección.
+
+## 📏 Escala Tipográfica (tokens.css)
+
+Todos los textos del sistema deben usar la siguiente escala armónica basada en Major Third (1.25). **Nunca usar tamaños arbitrarios** como `text-[8px]` o `text-[9px]`.
+
+| Token | Valor | Uso | Peso Mínimo |
+|-------|-------|-----|-------------|
+| `--text-2xs` | 10px | badges, labels, superscripts | font-weight ≥ 700 |
+| `--text-xs` | 12px | labels de tabla, meta info | 600 |
+| `--text-sm` | 13px | body small, nav items, log mono | 400 |
+| `--text-base` | 15px | body normal | 400 |
+| `--text-md` | 17px | subtítulos de sección | 600 |
+| `--text-lg` | 20px | títulos de panel | 700 |
+| `--text-xl` | 24px | headings principales | 700 |
+| `--text-2xl` | 30px | KPI values | 800 |
+| `--text-3xl` | 36px | hero numbers | 900 |
+
+**Regla**: Si el tamaño necesario no está en la escala, se debe **crear un nuevo token** en `tokens.css` antes de usarlo.
+
+## 🌐 Estándar de Componentes Iperf
+
+### 1. Chart Card (`components.py`)
+- **Borde**: `border-primary/20` (usa token de color primario)
+- **Título**: `text-2xs font-black uppercase tracking-[0.2em]`
+- **Stat value**: `text-xl font-black italic text-primary` (NUNCA hardcodear `#2563eb`)
+- **Stat unit**: `text-2xs font-black text-label/20`
+- **Colores de accent**: Usar tokens CSS `rgb(var(--color-accent-sky))` y `rgb(var(--color-accent-peach))`
+- **Componente compartido**: Definido en `panels/components.py`, importado por server.py y client.py
+
+### 2. Control Bar
+- **Clase de contenedor**: `flex items-center gap-4 p-4 bg-surface-container/50 rounded-panel`
+- **Labels**: `text-2xs font-black text-label/40 tracking-widest`
+- **Inputs**: `bg-black/20 border border-white/5 rounded-lg px-3 py-1.5 text-xs font-bold text-primary`
+- **Divider**: `w-px h-8 bg-white/5 mx-2`
+- **Gap debe ser idéntico** entre server (`gap-4`) y client (`gap-4`)
+
+### 3. Protocol Toggle (Solo Client)
+- **Clase**: `.proto-toggle-btn` / `.proto-toggle-btn.active`
+- **Estado activo**: Fondo primario + texto blanco + glow shadow
+- **Lógica**: Callback Python que alterna la clase `.active` entre los dos botones
+
+### 4. Log Terminal
+- **Fondo**: `bg-slate-950` (no hardcodear `#020617`)
+- **Header label**: `text-2xs font-black text-slate-200 tracking-widest`
+- **Body**: `font-mono text-sm text-emerald-400 leading-relaxed`
+- **Footer**: `text-2xs font-black text-label/20` para versión, `text-primary/40` para timestamp
+
+### 5. Section Headers (`nx-section-header`)
+- **Uso**: Separar secciones lógicas (Configuración vs Análisis)
+- **Override de padding**: Agregar `!pb-2` para reducir espacio en contexto iperf
+- **Label**: `nx-section-header__label` (11px / 900 / uppercase / 0.15em spacing)
+- **Rule**: `nx-section-header__rule` (12px × 2px, color primario)
+

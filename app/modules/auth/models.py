@@ -3,12 +3,6 @@ from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# Helper Table for Area-User Relationship
-user_areas = db.Table('user_areas',
-    db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
-    db.Column('area_id', db.Integer, db.ForeignKey('areas.id'), primary_key=True)
-)
-
 # Helper Table for Platform-User Relationship (Favs/Access)
 user_platforms = db.Table('user_platforms',
     db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
@@ -35,7 +29,6 @@ class User(db.Model, UserMixin):
     last_login_at = db.Column(db.DateTime, nullable=True)
     
     # Relationships
-    areas = db.relationship('Area', secondary='user_areas', backref=db.backref('users', lazy=True))
     platforms = db.relationship('Platform', secondary='user_platforms', backref=db.backref('users', lazy='dynamic'))
     favorites = db.relationship('Platform', secondary='user_favorites', backref=db.backref('favorited_by', lazy='dynamic'))
 
