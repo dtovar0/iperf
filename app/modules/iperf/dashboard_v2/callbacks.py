@@ -289,7 +289,6 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
          Output("current-bw",          "children"),
          Output("stat-jitter",         "children"),
          Output("stat-retx",           "children"),
-         Output("stat-samples",        "children"),
          Output("current-bw-chart",    "children"),
          Output("stat-jitter-chart",   "children"),
          Output("stat-retx-chart",     "children"),
@@ -306,7 +305,7 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
         try:
             if not current_user.is_authenticated:
                 return (_empty_fig("LOGIN"), _empty_fig("LOGIN"), _empty_fig("LOGIN"),
-                        "0.00", "0.000", "0", "0", "0.00", "0.000", "0",
+                        "0.00", "0.000", "0", "0.00", "0.000", "0",
                         "", datetime.now().strftime('%H:%M:%S'),
                         "hidden", "", "#")
 
@@ -339,7 +338,7 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
             if not y_bw_gbps:
                 fig_label = "ESCUCHANDO..." if IperfService.is_server_running(current_user.id) else "SIN SEÑAL"
                 return (_empty_fig(fig_label), _empty_fig("STANDBY"), _empty_fig("STANDBY"),
-                        "0.00", "0.000", "0", "0", "0.00", "0.000", "0",
+                        "0.00", "0.000", "0", "0.00", "0.000", "0",
                         log_el, datetime.now().strftime('%H:%M:%S'),
                         "hidden", "", report_url)
 
@@ -355,14 +354,14 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
             samples    = str(len(y_bw_gbps))
 
             return (bw_fig, jitter_fig, retx_fig,
-                    cur_bw, cur_jit, total_retx, samples,
+                    cur_bw, cur_jit, total_retx,
                     cur_bw, cur_jit, cur_retx,
                     log_el, datetime.now().strftime('%H:%M:%S'),
                     "hidden", "", report_url)
 
         except Exception as e:
             debug_logger.error(f"update_server: {e}\n{traceback.format_exc()}")
-            return (no_update,) * 15
+            return (no_update,) * 14
 
         except Exception as e:
             debug_logger.error(f"update_server: {e}\n{traceback.format_exc()}")
