@@ -124,6 +124,8 @@ class IperfService:
             if mode == "server":
                 if IperfService.ACCEPTED_RE.search(line):
                     flush_interval(current_db_session_id)
+                    from app.modules.iperf.dashboard_v2.state import clear_buffers
+                    clear_buffers()
                     with app.app_context():
                         try:
                             new_s = IperfSession(
