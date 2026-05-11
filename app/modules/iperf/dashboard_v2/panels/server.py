@@ -47,39 +47,43 @@ def get_server_panel():
             ])
         ]),
 
-        # FILA 2: KPI GRID
-        html.Div(className="grid grid-cols-4 gap-4 mb-6", children=[
-            html.Div(className="bg-surface-container border border-white/5 rounded-2xl p-6 text-center", children=[
-                html.P("THROUGHPUT", className="text-[9px] font-black text-label/30 tracking-widest mb-2"),
-                html.H2(id="current-bw", children="0.00", className="text-3xl font-black italic text-primary"),
-                html.P("Mbps", className="text-[8px] font-black text-label/10 uppercase mt-1"),
-            ]),
-            html.Div(className="bg-surface-container border border-white/5 rounded-2xl p-6 text-center", children=[
-                html.P("LATENCIA (JITTER)", className="text-[9px] font-black text-label/30 tracking-widest mb-2"),
-                html.H2(id="stat-jitter", children="0.000", className="text-3xl font-black italic text-amber-400"),
-                html.P("ms", className="text-[8px] font-black text-label/10 uppercase mt-1"),
-            ]),
-            html.Div(className="bg-surface-container border border-white/5 rounded-2xl p-6 text-center", children=[
-                html.P("RETRANS (TCP)", className="text-[9px] font-black text-label/30 tracking-widest mb-2"),
-                html.H2(id="stat-retx", children="0", className="text-3xl font-black italic text-rose-500"),
-                html.P("paquetes", className="text-[8px] font-black text-label/10 uppercase mt-1"),
-            ]),
-            html.Div(className="bg-surface-container border border-white/5 rounded-2xl p-6 text-center", children=[
-                html.P("MUESTRAS", className="text-[9px] font-black text-label/30 tracking-widest mb-2"),
-                html.H2(id="stat-samples", children="0", className="text-3xl font-black italic text-label"),
-                html.P("ventana 60s", className="text-[8px] font-black text-label/10 uppercase mt-1"),
-            ]),
-        ]),
-
-        # FILA 3: CHARTS & LOG
-        html.Div(className="grid grid-cols-12 gap-6", children=[
-            html.Div(className="col-span-7", children=[
+        # FILA 2: CONTENIDO PRINCIPAL (70/30)
+        html.Div(className="grid grid-cols-12 gap-6 items-stretch", children=[
+            # COLUMNA IZQUIERDA: GRÁFICAS (70%)
+            html.Div(className="col-span-8 space-y-6", children=[
                 _chart_card("Estabilidad de Ancho de Banda", "fas fa-chart-line", "#00d4ff", "current-bw-chart", "Mbps", "bw-chart", "#00d4ff"),
                 _chart_card("Variación de Latencia", "fas fa-wave-square", "#ffd166", "stat-jitter-chart", "ms", "jitter-chart", "#ffd166"),
                 _chart_card("Retransmisiones de Red", "fas fa-redo-alt", "#ff6b6b", "stat-retx-chart", "pkts", "retx-chart", "#ff6b6b"),
             ]),
-            html.Div(className="col-span-5", children=[
-                html.Div(className="bg-[#020617] border border-white/5 rounded-3xl h-full flex flex-col overflow-hidden shadow-2xl", children=[
+
+            # COLUMNA DERECHA: KPIs + LOGS (30%)
+            html.Div(className="col-span-4 flex flex-col gap-6", children=[
+                # KPI GRID (4 en una sola fila/grid compacto)
+                html.Div(className="grid grid-cols-2 gap-3", children=[
+                    html.Div(className="bg-surface-container border border-white/5 rounded-2xl p-4 text-center", children=[
+                        html.P("BW", className="text-[7px] font-black text-label/30 tracking-widest mb-1"),
+                        html.H2(id="current-bw", children="0.00", className="text-xl font-black italic text-primary"),
+                        html.P("Mbps", className="text-[6px] font-black text-label/10 uppercase"),
+                    ]),
+                    html.Div(className="bg-surface-container border border-white/5 rounded-2xl p-4 text-center", children=[
+                        html.P("JITTER", className="text-[7px] font-black text-label/30 tracking-widest mb-1"),
+                        html.H2(id="stat-jitter", children="0.000", className="text-xl font-black italic text-amber-400"),
+                        html.P("ms", className="text-[6px] font-black text-label/10 uppercase"),
+                    ]),
+                    html.Div(className="bg-surface-container border border-white/5 rounded-2xl p-4 text-center", children=[
+                        html.P("RETX", className="text-[7px] font-black text-label/30 tracking-widest mb-1"),
+                        html.H2(id="stat-retx", children="0", className="text-xl font-black italic text-rose-500"),
+                        html.P("pkts", className="text-[6px] font-black text-label/10 uppercase"),
+                    ]),
+                    html.Div(className="bg-surface-container border border-white/5 rounded-2xl p-4 text-center", children=[
+                        html.P("SAMPLES", className="text-[7px] font-black text-label/30 tracking-widest mb-1"),
+                        html.H2(id="stat-samples", children="0", className="text-xl font-black italic text-label"),
+                        html.P("30s", className="text-[6px] font-black text-label/10 uppercase"),
+                    ]),
+                ]),
+
+                # LOGS
+                html.Div(className="bg-[#020617] border border-white/5 rounded-3xl flex-1 flex flex-col overflow-hidden shadow-2xl min-h-[400px]", children=[
                     html.Div(className="p-6 border-b border-white/5 bg-white/5 flex justify-between items-center", children=[
                         html.Span("TELEMETRÍA EN VIVO", className="text-[10px] font-black text-label/60 tracking-widest"),
                         html.I(className="fas fa-terminal text-primary text-xs")
