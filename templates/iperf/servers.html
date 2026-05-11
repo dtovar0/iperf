@@ -70,9 +70,8 @@
                                             <th class="w-[50px] py-4 bg-panel-header border-y border-panel-border text-center" style="border-left:3px solid transparent;">
                                                 <input type="checkbox" id="selectAllServers" data-action="servers-select-all" class="nexus-checkbox mx-auto">
                                             </th>
-                                            <th class="w-[25%] py-4 bg-panel-header border-y border-panel-border px-5 text-left">Nombre</th>
-                                            <th class="w-[30%] py-4 bg-panel-header border-y border-panel-border px-5 text-left">Host / IP</th>
-                                            <th class="w-[25%] py-4 bg-panel-header border-y border-panel-border px-5 text-left">Token</th>
+                                            <th class="w-[40%] py-4 bg-panel-header border-y border-panel-border px-5 text-left">Nombre</th>
+                                            <th class="w-[45%] py-4 bg-panel-header border-y border-panel-border px-5 text-left">Host / IP</th>
                                             <th class="w-[120px] py-4 bg-panel-header border-y border-panel-border px-5 text-center">Estado</th>
                                         </tr>
                                     </thead>
@@ -148,21 +147,9 @@
                     </div>
                 </div>
 
-                <div class="space-y-2">
-                    <label class="text-[11px] font-black text-label/60 uppercase tracking-widest ml-1">Token de Acceso <span class="text-label/30">(Opcional)</span></label>
-                    <div class="relative group">
-                        <i class="fas fa-key absolute left-4 top-1/2 -translate-y-1/2 text-label/30 group-focus-within:text-primary transition-colors"></i>
-                        <input type="text" id="addServerToken" name="token" 
-                            class="w-full h-12 bg-panel-fill/60 border-2 border-panel-border rounded-xl pl-11 pr-14 text-sm font-bold focus:border-primary outline-none transition-all font-mono" 
-                            placeholder="Token de autenticación del servidor">
-                        <button type="button" data-action="servers-generate-token" data-target="addServerToken" class="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest hover:bg-primary/20 transition-colors">
-                            <i class="fas fa-dice mr-1"></i>Generar
-                        </button>
-                    </div>
-                    <p class="text-[10px] font-bold text-label/40 uppercase tracking-widest px-1 italic">
-                        El token se usa para autenticar conexiones remotas al servidor iperf3.
-                    </p>
-                </div>
+                <p class="text-[10px] font-bold text-label/40 uppercase tracking-widest px-1 italic text-center">
+                    La autenticación se realiza mediante el token global configurado en el sistema (.env).
+                </p>
             </div>
 
             <footer class="modal-footer">
@@ -236,18 +223,10 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="space-y-2">
-                    <label class="text-[11px] font-black text-label/60 uppercase tracking-widest ml-1">Token de Acceso</label>
-                    <div class="relative group">
-                        <i class="fas fa-key absolute left-4 top-1/2 -translate-y-1/2 text-label/30 group-focus-within:text-primary transition-colors"></i>
-                        <input type="text" id="editServerToken" name="token" 
-                            class="w-full h-12 bg-panel-fill/60 border-2 border-panel-border rounded-xl pl-11 pr-14 text-sm font-bold focus:border-primary outline-none transition-all font-mono">
-                        <button type="button" data-action="servers-generate-token" data-target="editServerToken" class="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest hover:bg-primary/20 transition-colors">
-                            <i class="fas fa-dice mr-1"></i>Generar
-                        </button>
-                    </div>
-                </div>
+                
+                <p class="text-[10px] font-bold text-label/40 uppercase tracking-widest px-1 italic text-center">
+                    Nota: El token de autenticación es global para todos los servidores.
+                </p>
             </div>
 
             <footer class="modal-footer">

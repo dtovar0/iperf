@@ -276,7 +276,6 @@ def add_server():
         data = request.get_json()
         name = data.get('name', '').strip()
         host = data.get('host', '').strip()
-        token = data.get('token', '').strip()
         status_str = data.get('status', 'Activo')
 
         if not name or not host:
@@ -288,7 +287,6 @@ def add_server():
         server = IperfServerConfig(
             name=name,
             host=host,
-            token=token if token else None,
             is_active=(status_str == 'Activo'),
             created_by=current_user.id if current_user.is_authenticated else None
         )
@@ -314,8 +312,6 @@ def edit_server(server_id):
             server.name = data['name'].strip()
         if 'host' in data:
             server.host = data['host'].strip()
-        if 'token' in data:
-            server.token = data['token'].strip() if data['token'] else None
         if 'status' in data:
             server.is_active = (data['status'] == 'Activo')
 

@@ -10,13 +10,6 @@ var srvCurrentEditId = null;
 
 // ── Utilidades ───────────────────────────────────────────────────────────────
 
-function generateSecureToken(length = 32) {
-    const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
-    const array = new Uint8Array(length);
-    crypto.getRandomValues(array);
-    return Array.from(array, b => charset[b % charset.length]).join('');
-}
-
 function createServerEmptyState(title, text, iconClass = 'fa-server') {
     return `
         <div class="flex flex-col items-center justify-center py-16 opacity-40">
@@ -64,7 +57,7 @@ function renderServersTable() {
         const title = isSearch ? 'Sin resultados' : 'Sin Servidores';
         const text = isSearch ? 'No encontramos servidores con ese criterio.' : 'Registre un servidor para comenzar.';
 
-        tbody.innerHTML = `<tr><td colspan="5">${createServerEmptyState(title, text, icon)}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4">${createServerEmptyState(title, text, icon)}</td></tr>`;
         renderServerPagination();
         return;
     }
@@ -74,9 +67,6 @@ function renderServersTable() {
         tr.className = "hover:bg-primary/5 transition-all group cursor-pointer";
         
         const statusCls = server.status === 'Activo' ? 'nx-badge-success' : 'nx-badge-error';
-        const tokenDisplay = server.token 
-            ? `<span class="font-mono text-[11px] font-bold text-emerald-500/70 bg-emerald-500/10 px-2 py-0.5 rounded-md">${server.token.substring(0, 12)}•••</span>` 
-            : '<span class="opacity-10 text-[10px] font-black uppercase tracking-widest">—</span>';
 
         tr.innerHTML = `
             <td class="text-center" style="border-left:3px solid transparent;padding:0 1.25rem 0 1rem;">
@@ -95,7 +85,6 @@ function renderServersTable() {
             <td>
                 <span class="text-[13px] font-bold text-label/60 font-mono tracking-wide truncate">${server.host}</span>
             </td>
-            <td>${tokenDisplay}</td>
             <td class="text-center">
                 <span class="nx-badge ${statusCls}">${server.status.toUpperCase()}</span>
             </td>
@@ -116,7 +105,7 @@ function renderServersTable() {
         tbody.appendChild(tr);
     });
 
-    renderServerGhostRows(5);
+    renderServerGhostRows(4);
     renderServerPagination();
     updateServerActionButtons();
 }
@@ -224,7 +213,6 @@ async function saveNewServer() {
     const name = document.getElementById('addServerName').value.trim();
     const host = document.getElementById('addServerHost').value.trim();
     const statusToggle = document.getElementById('addServerStatusToggle');
-    const token = document.getElementById('addServerToken').value.trim();
 
     if (!name || !host) {
         return showToast('Nombre y Host son obligatorios.', 'error');
@@ -233,8 +221,7 @@ async function saveNewServer() {
     const payload = {
         name: name,
         host: host,
-        status: statusToggle && statusToggle.checked ? 'Activo' : 'Inactivo',
-        token: token
+        status: statusToggle && statusToggle.checked ? 'Activo' : 'Inactivo'
     };
 
     try {
@@ -276,7 +263,6 @@ function editSelectedServer() {
     document.getElementById('editServerNameDisplay').textContent = `${server.name} (${server.host})`;
     document.getElementById('editServerName').value = server.name;
     document.getElementById('editServerHost').value = server.host;
-    document.getElementById('editServerToken').value = server.token || '';
 
     // Status toggle
     const statusToggle = document.getElementById('editServerStatusToggle');
@@ -298,8 +284,7 @@ async function saveServerChanges() {
     const payload = {
         name: document.getElementById('editServerName').value.trim(),
         host: document.getElementById('editServerHost').value.trim(),
-        status: statusToggle && statusToggle.checked ? 'Activo' : 'Inactivo',
-        token: document.getElementById('editServerToken').value.trim()
+        status: statusToggle && statusToggle.checked ? 'Activo' : 'Inactivo'
     };
 
     if (!payload.name || !payload.host) {
@@ -434,15 +419,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const checkboxes = document.querySelectorAll('.server-checkbox');
             checkboxes.forEach(cb => cb.checked = event.target.checked);
             updateServerActionButtons();
-        }
-
-        if (action === 'servers-generate-token') {
-            const targetId = trigger.dataset.target;
-            const input = document.getElementById(targetId);
-            if (input) {
-                input.value = generateSecureToken(32);
-                input.select();
-            }
         }
     });
 
