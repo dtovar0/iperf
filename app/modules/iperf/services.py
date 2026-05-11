@@ -226,12 +226,19 @@ class IperfService:
         # 1. Gestión Agresiva: Si está ocupado, intentamos liberar (Rule #8)
         if IperfService.port_is_listening(port):
             try:
-                # Intentamos matar al proceso que ocupa el puerto
                 subprocess.run(["fuser", "-k", "-n", "tcp", str(port)], capture_output=True)
                 subprocess.run(["pkill", "-9", "iperf3"], capture_output=True)
-                time.sleep(1) # Esperar liberación del socket
+                # Esperar hasta 2s a que el puerto se libere realmente
+                for _ in range(8):
+                    time.sleep(0.25)
+                    if not IperfService.port_is_listening(port):
+                        break
             except Exception as e:
                 print(f"Error en limpieza agresiva: {e}")
+
+        # 2. Verificar si el puerto sigue ocupado tras limpieza
+        if IperfService.port_is_listening(port):
+            return False, f"El puerto {port} sigue ocupado por otro proceso y no pudo ser liberado."
 
         try:
             # Sesión inicial de "ESCUCHA"
@@ -251,17 +258,19 @@ class IperfService:
             
             threading.Thread(target=IperfService._iperf3_reader, args=(proc, "server", session_id, app, user_id), daemon=True).start()
             
-            # Esperar hasta 2s a que el puerto quede activo
-            for _ in range(8):
-                time.sleep(0.25)
+            # 3. Esperar a que NUESTRO proceso active el puerto
+            for _ in range(10):
+                time.sleep(0.3)
+                # Si el proceso murió, es que hubo un error (probablemente Bind error)
                 if proc.poll() is not None:
-                    return False, f"iperf3 falló al arrancar tras limpieza."
+                    return False, "El servidor iperf3 se cerró inesperadamente al arrancar."
+                # Si el puerto ya responde, éxito
                 if IperfService.port_is_listening(port):
-                    return True, f"Servidor iniciado en puerto {port}."
+                    return True, f"Servidor iniciado exitosamente en el puerto {port}."
 
-            return False, f"Timeout: puerto {port} sigue ocupado tras intento de liberación"
+            return False, f"Timeout: el servidor iperf3 no activó el puerto {port} a tiempo."
         except Exception as e:
-            return False, str(e)
+            return False, f"Error fatal: {str(e)}"
 
     @staticmethod
     def stop_server(user_id):
