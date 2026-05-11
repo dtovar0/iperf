@@ -377,10 +377,11 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
          State("cli-port",     "value"),
          State("cli-duration", "value"),
          State("cli-parallel", "value"),
+         State("cli-length",   "value"),
          State("cli-proto",    "value")],
         prevent_initial_call=True,
     )
-    def control_client(n_clicks, host, port, duration, parallel, proto):
+    def control_client(n_clicks, host, port, duration, parallel, length, proto):
         try:
             if not n_clicks:
                 return (no_update,) * 4
@@ -405,6 +406,9 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
             cmd = ["iperf3", "-c", host, "-p", str(port or 5201),
                    "-t", str(duration or 10), "-P", str(parallel or 1), 
                    "--forceflush", "-i", "1"]
+            
+            if length:
+                cmd += ["-l", str(length)]
             if (proto or "tcp") == "udp":
                 cmd += ["-u", "-b", "100M"]
 
