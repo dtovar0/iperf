@@ -376,10 +376,11 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
         [State("cli-host",     "value"),
          State("cli-port",     "value"),
          State("cli-duration", "value"),
+         State("cli-parallel", "value"),
          State("cli-proto",    "value")],
         prevent_initial_call=True,
     )
-    def control_client(n_clicks, host, port, duration, proto):
+    def control_client(n_clicks, host, port, duration, parallel, proto):
         try:
             if not n_clicks:
                 return (no_update,) * 4
@@ -391,6 +392,7 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
             new_s = IperfSession(
                 mode="client", host=host, port=port,
                 protocol=proto or "tcp", duration_s=duration,
+                parallel=parallel or 1,
                 status="running", user_id=current_user.id,
                 started_at=datetime.utcnow(),
             )
@@ -401,7 +403,8 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
             IperfService._live_data[sid] = {"measurements": [], "summary": None, "logs": []}
 
             cmd = ["iperf3", "-c", host, "-p", str(port or 5201),
-                   "-t", str(duration or 10), "--forceflush", "-i", "1"]
+                   "-t", str(duration or 10), "-P", str(parallel or 1), 
+                   "--forceflush", "-i", "1"]
             if (proto or "tcp") == "udp":
                 cmd += ["-u", "-b", "100M"]
 

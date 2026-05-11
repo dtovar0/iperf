@@ -45,6 +45,10 @@ def get_client_panel():
                 dcc.Input(id="cli-duration", type="number", value=10, className="bg-transparent border-none text-sm font-black text-primary w-16 outline-none")
             ]),
             html.Div([
+                html.Label("STREAMS (-P)", className="block text-[8px] font-black text-label/40 mb-1"),
+                dcc.Input(id="cli-parallel", type="number", value=1, min=1, max=128, className="bg-transparent border-none text-sm font-black text-primary w-16 outline-none")
+            ]),
+            html.Div([
                 html.Label("PROTOCOLO", className="block text-[8px] font-black text-label/40 mb-1"),
                 dcc.Dropdown(
                     id="cli-proto",
