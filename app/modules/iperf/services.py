@@ -103,8 +103,8 @@ class IperfService:
                         if t1 != last_t1:
                             last_t1 = t1
                             step_counter += 1
-                            # Cada 5 steps (intervalos), inyectar cabecera antes de la siguiente línea
-                            if step_counter > 1 and (step_counter - 1) % 5 == 0 and header_line:
+                            # Cada 10 steps (intervalos), inyectar cabecera antes de la siguiente línea
+                            if step_counter > 1 and (step_counter - 1) % 10 == 0 and header_line:
                                 with state_lock:
                                     log_lines.append(header_line)
                                 if current_db_session_id in IperfService._live_data:
