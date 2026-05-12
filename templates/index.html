@@ -49,7 +49,7 @@
     /* KPI Strip Dashboard */
     .nx-kpi-strip {
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         gap: 1.5rem;
         padding: 0 2rem 1.5rem;
         flex-shrink: 0;
@@ -152,34 +152,6 @@
     </header>
 
     <div class="nx-kpi-strip">
-        <!-- Áreas -->
-        <div class="nx-kpi" style="--kpi-color: #f59e0b; --kpi-color-alpha: rgba(245, 158, 11, 0.1);">
-            <div class="nx-kpi__accent"></div>
-            <div class="nx-kpi__header">
-                <span class="nx-kpi__label">Ecosistema</span>
-                <div class="nx-kpi__icon"><i class="fas fa-network-wired text-[11px]"></i></div>
-            </div>
-            <div class="nx-kpi__value">{{ areas_count_num or 0 }}</div>
-            <div class="nx-kpi__footer">
-                <span class="nx-kpi__trend">— sin cambio</span>
-                <span class="nx-kpi__tag">Áreas</span>
-            </div>
-        </div>
-
-        <!-- Plataformas -->
-        <div class="nx-kpi" style="--kpi-color: #3b82f6; --kpi-color-alpha: rgba(59, 130, 246, 0.1);">
-            <div class="nx-kpi__accent"></div>
-            <div class="nx-kpi__header">
-                <span class="nx-kpi__label">Capacidad</span>
-                <div class="nx-kpi__icon"><i class="fas fa-layer-group text-[11px]"></i></div>
-            </div>
-            <div class="nx-kpi__value">{{ total or 0 }}</div>
-            <div class="nx-kpi__footer">
-                <span class="nx-kpi__trend">↑ periodo actual</span>
-                <span class="nx-kpi__tag">Nodos</span>
-            </div>
-        </div>
-
         <!-- Usuarios -->
         <div class="nx-kpi" style="--kpi-color: #10b981; --kpi-color-alpha: rgba(16, 185, 129, 0.1);">
             <div class="nx-kpi__accent"></div>
@@ -187,38 +159,52 @@
                 <span class="nx-kpi__label">Identidades</span>
                 <div class="nx-kpi__icon"><i class="fas fa-users-viewfinder text-[11px]"></i></div>
             </div>
-            <div class="nx-kpi__value">{{ total_users or 0 }}</div>
+            <div class="nx-kpi__value">{{ users_active or 0 }}</div>
             <div class="nx-kpi__footer">
-                <span class="nx-kpi__trend">Activos</span>
-                <span class="nx-kpi__tag">Usuarios</span>
+                <span class="nx-kpi__trend">Usuarios Activos</span>
+                <span class="nx-kpi__tag">Personal</span>
             </div>
         </div>
 
-        <!-- Pendientes -->
-        <div class="nx-kpi" style="--kpi-color: #f43f5e; --kpi-color-alpha: rgba(244, 63, 94, 0.1);">
+        <!-- Servidores -->
+        <div class="nx-kpi" style="--kpi-color: #3b82f6; --kpi-color-alpha: rgba(59, 130, 246, 0.1);">
             <div class="nx-kpi__accent"></div>
             <div class="nx-kpi__header">
-                <span class="nx-kpi__label">Interacción</span>
-                <div class="nx-kpi__icon"><i class="fas fa-microchip text-[11px]"></i></div>
+                <span class="nx-kpi__label">Infraestructura</span>
+                <div class="nx-kpi__icon"><i class="fas fa-server text-[11px]"></i></div>
             </div>
-            <div class="nx-kpi__value">{{ pending or 0 }}</div>
+            <div class="nx-kpi__value">{{ servers_count or 0 }}</div>
             <div class="nx-kpi__footer">
-                <span class="nx-kpi__trend">— normal</span>
-                <span class="nx-kpi__tag">Fila</span>
+                <span class="nx-kpi__trend">Nodos Activos</span>
+                <span class="nx-kpi__tag">Servidores</span>
             </div>
         </div>
 
-        <!-- Visitas -->
+        <!-- Cliente -->
+        <div class="nx-kpi" style="--kpi-color: #f59e0b; --kpi-color-alpha: rgba(245, 158, 11, 0.1);">
+            <div class="nx-kpi__accent"></div>
+            <div class="nx-kpi__header">
+                <span class="nx-kpi__label">Transmisión</span>
+                <div class="nx-kpi__icon"><i class="fas fa-satellite-dish text-[11px]"></i></div>
+            </div>
+            <div class="nx-kpi__value">{{ client_tests or 0 }}</div>
+            <div class="nx-kpi__footer">
+                <span class="nx-kpi__trend">Tests Ejecutados</span>
+                <span class="nx-kpi__tag">Cliente</span>
+            </div>
+        </div>
+
+        <!-- Servidor -->
         <div class="nx-kpi" style="--kpi-color: #8b5cf6; --kpi-color-alpha: rgba(139, 92, 246, 0.1);">
             <div class="nx-kpi__accent"></div>
             <div class="nx-kpi__header">
-                <span class="nx-kpi__label">Tráfico</span>
-                <div class="nx-kpi__icon"><i class="fas fa-bolt-lightning text-[11px]"></i></div>
+                <span class="nx-kpi__label">Recepción</span>
+                <div class="nx-kpi__icon"><i class="fas fa-broadcast-tower text-[11px]"></i></div>
             </div>
-            <div class="nx-kpi__value">{{ visits_total or 0 }}</div>
+            <div class="nx-kpi__value">{{ server_tests or 0 }}</div>
             <div class="nx-kpi__footer">
-                <span class="nx-kpi__trend">Acumulado global</span>
-                <span class="nx-kpi__tag">Impacto</span>
+                <span class="nx-kpi__trend">Sesiones Recibidas</span>
+                <span class="nx-kpi__tag">Servidor</span>
             </div>
         </div>
     </div>
@@ -229,44 +215,47 @@
             <div class="nx-section-header__rule"></div>
             <h3 class="nx-section-header__label">Análisis Operativo</h3>
         </div>
-        <span class="nx-section-header__sub">Métricas de demanda y eficiencia</span>
+        <span class="nx-section-header__sub">Telemetría de pruebas y carga</span>
     </header>
 
     <div class="dashboard-analytics-wrap">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 flex-1 min-h-0">
             
             <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8 min-h-0">
-                <!-- Charts con diseño de panel unificado -->
+                <!-- Chart 1: Cliente por Usuario -->
                 <div class="bg-panel-fill border border-panel-border rounded-xl p-4 flex flex-col shadow-sm gap-4 overflow-hidden h-full">
                     <header class="flex items-center gap-2">
-                        <div class="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-primary text-[10px]"><i class="fas fa-chart-simple"></i></div>
-                        <h3 class="text-[9px] font-black text-label uppercase tracking-widest shrink-0">Densidad Plataformas</h3>
+                        <div class="w-6 h-6 rounded bg-amber-500/10 flex items-center justify-center text-amber-500 text-[10px]"><i class="fas fa-user-tag"></i></div>
+                        <h3 class="text-[9px] font-black text-label uppercase tracking-widest shrink-0">Tests Cliente / Usuario</h3>
                     </header>
-                    <div class="flex-1 chart-container-box" id="c-platform"></div>
+                    <div class="flex-1 chart-container-box" id="c-client-user"></div>
                 </div>
                 
+                <!-- Chart 2: Servidor por Usuario -->
                 <div class="bg-panel-fill border border-panel-border rounded-xl p-4 flex flex-col shadow-sm gap-4 overflow-hidden h-full">
                     <header class="flex items-center gap-2">
-                        <div class="w-6 h-6 rounded bg-violet-500/10 flex items-center justify-center text-violet-500 text-[10px]"><i class="fas fa-users-viewfinder"></i></div>
-                        <h3 class="text-[9px] font-black text-label uppercase tracking-widest shrink-0">Población Áreas</h3>
+                        <div class="w-6 h-6 rounded bg-violet-500/10 flex items-center justify-center text-violet-500 text-[10px]"><i class="fas fa-server"></i></div>
+                        <h3 class="text-[9px] font-black text-label uppercase tracking-widest shrink-0">Tests Servidor / Usuario</h3>
                     </header>
-                    <div class="flex-1 chart-container-box" id="c-area"></div>
+                    <div class="flex-1 chart-container-box" id="c-server-user"></div>
                 </div>
 
+                <!-- Chart 3: IPs por Usuario (Top Hosts) -->
                 <div class="bg-panel-fill border border-panel-border rounded-xl p-4 flex flex-col shadow-sm gap-4 overflow-hidden h-full">
                     <header class="flex items-center gap-2">
-                        <div class="w-6 h-6 rounded bg-amber-500/10 flex items-center justify-center text-amber-500 text-[10px]"><i class="fas fa-microchip"></i></div>
-                        <h3 class="text-[9px] font-black text-label uppercase tracking-widest shrink-0">Solicitudes Activas</h3>
+                        <div class="w-6 h-6 rounded bg-sky-500/10 flex items-center justify-center text-sky-500 text-[10px]"><i class="fas fa-network-wired"></i></div>
+                        <h3 class="text-[9px] font-black text-label uppercase tracking-widest shrink-0">IPs / Hosts Frecuentes</h3>
                     </header>
-                    <div class="flex-1 chart-container-box" id="c-pending"></div>
+                    <div class="flex-1 chart-container-box" id="c-ips"></div>
                 </div>
 
+                <!-- Chart 4: Tendencia de Tareas -->
                 <div class="bg-panel-fill border border-panel-border rounded-xl p-4 flex flex-col shadow-sm gap-4 overflow-hidden h-full">
                     <header class="flex items-center gap-2">
-                        <div class="w-6 h-6 rounded bg-rose-500/10 flex items-center justify-center text-rose-500 text-[10px]"><i class="fas fa-bolt-lightning"></i></div>
-                        <h3 class="text-[9px] font-black text-label uppercase tracking-widest shrink-0">Tráfico Aplicativos</h3>
+                        <div class="w-6 h-6 rounded bg-rose-500/10 flex items-center justify-center text-rose-500 text-[10px]"><i class="fas fa-chart-line"></i></div>
+                        <h3 class="text-[9px] font-black text-label uppercase tracking-widest shrink-0">Tendencia Tareas (7d)</h3>
                     </header>
-                    <div class="flex-1 chart-container-box" id="c-visits"></div>
+                    <div class="flex-1 chart-container-box" id="c-trend"></div>
                 </div>
             </div>
 
@@ -317,13 +306,18 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
     (function() {
         const data = {
-            up: { l: {{ users_platform_labels|tojson if users_platform_labels else '[]' }}, v: {{ users_platform_values|tojson if users_platform_values else '[]' }} },
-            ua: { l: {{ users_area_labels|tojson if users_area_labels else '[]' }}, v: {{ users_area_values|tojson if users_area_values else '[]' }} },
-            pr: { l: {{ pending_platform_labels|tojson if pending_platform_labels else '[]' }}, v: {{ pending_platform_values|tojson if pending_platform_values else '[]' }} },
-            mv: { l: {{ most_visited|map(attribute='name')|list|tojson if most_visited else '[]' }}, v: {{ most_visited|map(attribute='visits')|list|tojson if most_visited else '[]' }} }
+            cu: { l: {{ cu_labels|tojson }}, v: {{ cu_values|tojson }} },
+            su: { l: {{ su_labels|tojson }}, v: {{ su_values|tojson }} },
+            ip: { l: {{ ip_labels|tojson }}, v: {{ ip_values|tojson }} },
+            trend: { 
+                l: {{ trend_labels|tojson }}, 
+                client: {{ trend_client|tojson }},
+                server: {{ trend_server|tojson }}
+            }
         };
 
         const accent = '{{ portal_settings.portal_logo_bg if (portal_settings and portal_settings.portal_logo_bg) else "#2563eb" }}';
@@ -332,15 +326,11 @@
             const el = document.getElementById(id);
             if (!el) return;
             el.innerHTML = `
-                <div class="flex flex-col items-center justify-center h-full p-6 text-center animate-in fade-in duration-1000">
-                    <div class="w-16 h-16 rounded-2xl bg-panel-border/30 flex items-center justify-center text-label/20 mb-4 ring-1 ring-white/5 shadow-inner">
-                        <i class="fas fa-satellite-dish text-2xl"></i>
+                <div class="flex flex-col items-center justify-center h-full p-6 text-center opacity-40">
+                    <div class="w-12 h-12 rounded-xl bg-panel-border/30 flex items-center justify-center text-label/20 mb-4">
+                        <i class="fas fa-satellite-dish text-xl"></i>
                     </div>
-                    <h4 class="text-[11px] font-black text-label uppercase tracking-widest italic opacity-60">${metric}</h4>
-                    <p class="text-[9px] text-label/30 font-bold uppercase tracking-[0.2em] mt-2 leading-relaxed">
-                        Aún no hay registros suficientes. <br>
-                        <span class="text-primary font-black">ESPERANDO TELEMETRÍA</span>
-                    </p>
+                    <h4 class="text-[10px] font-black text-label uppercase tracking-widest italic">${metric}</h4>
                 </div>
             `;
         }
@@ -351,10 +341,11 @@
                 background: 'transparent', 
                 fontFamily: 'Inter', 
                 zoom: { enabled: false },
-                theme: { mode: document.documentElement.classList.contains('dark') ? 'dark' : 'light' }
+                animations: { enabled: true, easing: 'easeinout', speed: 800 }
             },
-            stroke: { curve: 'smooth', width: 4 },
-            grid: { borderColor: 'var(--color-panel-border)', strokeDashArray: 4 },
+            theme: { mode: document.documentElement.classList.contains('dark') ? 'dark' : 'light' },
+            stroke: { curve: 'smooth', width: 3 },
+            grid: { borderColor: 'rgba(var(--color-panel-border), 0.3)', strokeDashArray: 4 },
             xaxis: {
                 axisBorder: { show: false }, axisTicks: { show: false },
                 labels: { style: { colors: 'var(--color-label-muted)', fontSize: '9px', fontWeight: 800 } }
@@ -362,52 +353,56 @@
             yaxis: {
                 labels: { style: { colors: 'var(--color-label-muted)', fontSize: '9px', fontWeight: 800 } }
             },
-            tooltip: { theme: 'dark' },
-            colors: ['var(--color-primary)']
+            tooltip: { theme: 'dark' }
         };
 
         function render() {
-            if (typeof ApexCharts === 'undefined') { return setTimeout(render, 100); }
-
-            if (data.up.v.length > 0 && !data.up.v.every(v => v === 0)) {
-                new ApexCharts(document.querySelector("#c-platform"), {
-                    ...baseCfg, chart: { ...baseCfg.chart, type: 'bar', height: '100%' },
-                    series: [{ name: 'Usuarios', data: data.up.v }],
-                    xaxis: { ...baseCfg.xaxis, categories: data.up.l },
-                    plotOptions: { bar: { borderRadius: 12, distributed: true, columnWidth: '35%' } },
-                    colors: [accent, '#8b5cf6', '#10b981', '#f59e0b', '#3b82f6']
-                }).render();
-            } else { drawEmpty('c-platform', 'Distribución Plataformas'); }
-
-            if (data.ua.v.length > 0 && !data.ua.v.every(v => v === 0)) {
-                new ApexCharts(document.querySelector("#c-area"), {
-                    ...baseCfg, chart: { ...baseCfg.chart, type: 'bar', height: '100%' },
-                    series: [{ name: 'Densidad', data: data.ua.v }],
-                    xaxis: { ...baseCfg.xaxis, categories: data.ua.l },
-                    plotOptions: { bar: { borderRadius: 10, horizontal: true, barHeight: '35%' } },
-                    colors: ['#8b5cf6']
-                }).render();
-            } else { drawEmpty('c-area', 'Densidad por Áreas'); }
-
-            if (data.pr.v.length > 0 && !data.pr.v.every(v => v === 0)) {
-                new ApexCharts(document.querySelector("#c-pending"), {
-                    ...baseCfg, chart: { ...baseCfg.chart, type: 'bar', height: '100%' },
-                    series: [{ name: 'Pendientes', data: data.pr.v }],
-                    xaxis: { ...baseCfg.xaxis, categories: data.pr.l },
-                    plotOptions: { bar: { borderRadius: 8, columnWidth: '35%' } },
+            // 1. Client per User (Stacked Column)
+            if (data.cu.v.length > 0) {
+                new ApexCharts(document.querySelector("#c-client-user"), {
+                    ...baseCfg, chart: { ...baseCfg.chart, type: 'bar', height: '100%', stacked: true },
+                    series: [{ name: 'Tests Cliente', data: data.cu.v }],
+                    xaxis: { ...baseCfg.xaxis, categories: data.cu.l },
+                    plotOptions: { bar: { borderRadius: 6, columnWidth: '40%' } },
                     colors: ['#f59e0b']
                 }).render();
-            } else { drawEmpty('c-pending', 'Solicitudes Críticas'); }
+            } else { drawEmpty('c-client-user', 'Sin datos de cliente'); }
 
-            if (data.mv.v.length > 0 && !data.mv.v.every(v => v === 0)) {
-                new ApexCharts(document.querySelector("#c-visits"), {
-                    ...baseCfg, chart: { ...baseCfg.chart, type: 'bar', height: '100%' },
-                    series: [{ name: 'Visitas', data: data.mv.v }],
-                    xaxis: { ...baseCfg.xaxis, categories: data.mv.l },
-                    plotOptions: { bar: { borderRadius: 8, columnWidth: '35%' } },
-                    colors: ['#ef4444']
+            // 2. Server per User (Stacked Column)
+            if (data.su.v.length > 0) {
+                new ApexCharts(document.querySelector("#c-server-user"), {
+                    ...baseCfg, chart: { ...baseCfg.chart, type: 'bar', height: '100%', stacked: true },
+                    series: [{ name: 'Tests Servidor', data: data.su.v }],
+                    xaxis: { ...baseCfg.xaxis, categories: data.su.l },
+                    plotOptions: { bar: { borderRadius: 6, columnWidth: '40%' } },
+                    colors: ['#8b5cf6']
                 }).render();
-            } else { drawEmpty('c-visits', 'Análisis de Tráfico'); }
+            } else { drawEmpty('c-server-user', 'Sin datos de servidor'); }
+
+            // 3. IPs Distribution (Horizontal Bar)
+            if (data.ip.v.length > 0) {
+                new ApexCharts(document.querySelector("#c-ips"), {
+                    ...baseCfg, chart: { ...baseCfg.chart, type: 'bar', height: '100%' },
+                    series: [{ name: 'Frecuencia', data: data.ip.v }],
+                    xaxis: { ...baseCfg.xaxis, categories: data.ip.l },
+                    plotOptions: { bar: { borderRadius: 4, horizontal: true, barHeight: '40%' } },
+                    colors: ['#0ea5e9']
+                }).render();
+            } else { drawEmpty('c-ips', 'Sin IPs registradas'); }
+
+            // 4. Trend (Line Chart)
+            if (data.trend.client.length > 0 || data.trend.server.length > 0) {
+                new ApexCharts(document.querySelector("#c-trend"), {
+                    ...baseCfg, chart: { ...baseCfg.chart, type: 'line', height: '100%' },
+                    series: [
+                        { name: 'Modo Cliente', data: data.trend.client },
+                        { name: 'Modo Servidor', data: data.trend.server }
+                    ],
+                    xaxis: { ...baseCfg.xaxis, categories: data.trend.l },
+                    colors: ['#f59e0b', '#8b5cf6'],
+                    markers: { size: 4 }
+                }).render();
+            } else { drawEmpty('c-trend', 'Sin tendencia activa'); }
         }
 
         render();

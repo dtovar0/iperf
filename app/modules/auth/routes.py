@@ -78,7 +78,7 @@ def login():
                 print(f"DEBUG: Procediendo a login_user para {user.email}")
                 login_user(user, remember=True)
                 print("DEBUG: Registro en auditoría...")
-                add_audit_log(f"ACCESO SSO: {authelia_user}", status="success", detail=f"Sesión iniciada exitosamente vía Portal Authelia")
+                add_audit_log(f"ACCESO SSO: {authelia_user}", module="Seguridad", target=authelia_user, status="success", description="Sesión iniciada exitosamente vía Portal Authelia")
                 print("DEBUG: Redirigiendo a index...")
                 return redirect(url_for('core.index'))
 
@@ -94,7 +94,7 @@ def login():
                 if ldap_result.get("status") == "success":
                     user = ldap_result["user"]
                     login_user(user, remember=True)
-                    add_audit_log(f"ACCESO DIRECTORIO: {email}", status="success", detail=f"Autenticación corporativa exitosa")
+                    add_audit_log(f"ACCESO DIRECTORIO: {email}", module="Seguridad", target=email, status="success", description="Autenticación corporativa exitosa")
                     return redirect(url_for('core.index'))
                 else:
                     flash(f"Error: {ldap_result.get('message')}", "error")
@@ -102,7 +102,7 @@ def login():
                 user = User.query.filter_by(email=email).first()
                 if user and user.check_password(password):
                     login_user(user, remember=True)
-                    add_audit_log(f"ACCESO LOCAL: {email}", status="success", detail=f"Autenticación manual exitosa")
+                    add_audit_log(f"ACCESO LOCAL: {email}", module="Seguridad", target=email, status="success", description="Autenticación manual exitosa")
                     return redirect(url_for('core.index'))
                 flash("Credenciales incorrectas", "error")
 
@@ -140,7 +140,7 @@ def purge_users():
 def logout():
     user_email = current_user.email
     logout_user()
-    add_audit_log(f"CIERRE DE SESIÓN: {user_email}", status="success", detail=f"El usuario ha finalizado su sesión de forma manual")
+    add_audit_log(f"CIERRE DE SESIÓN: {user_email}", module="Seguridad", target=user_email, status="success", description="El usuario ha finalizado su sesión de forma manual")
     
     # --- LOGOUT COORDINADO CON AUTHELIA (SSO) ---
     if os.getenv('AUTHELIA_ENABLED', 'false').lower() == 'true':
@@ -264,7 +264,7 @@ def create_user():
                 'url': f"{base_url}/auth/login"
             })
 
-        add_audit_log("usuario creado", status="success", detail=f"Se creó el usuario: {target_email}")
+        add_audit_log("USUARIO CREADO", module="Seguridad", target=target_email, status="success", description=f"Se creó el usuario: {target_email}")
         
         return jsonify({"status": "success", "message": "Usuario creado"})
     except Exception as e:

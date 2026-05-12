@@ -5,59 +5,70 @@
 {% block breadcrumbs %}
 <span class="text-secondary cursor-pointer hover:text-primary transition-colors" onclick="window.location.href='/'">Inicio</span>
 <svg class="w-4 h-4 text-label/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-<span class="text-secondary cursor-pointer hover:text-primary transition-colors" onclick="window.location.href='/iperf/dashboard/'">iperf3 Manager</span>
+<span class="text-secondary cursor-pointer hover:text-primary transition-colors" onclick="window.location.href='/iperf/live/'">iperf3 Manager</span>
 <svg class="w-4 h-4 text-label/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
 <span class="text-primary font-bold">Historial</span>
 {% endblock %}
 
 {% block content %}
 <div id="historyWrapper" class="w-full h-full p-6 overflow-hidden flex flex-col">
+
+    <!-- PANEL AREA: flex-1 + min-h-0 so it respects parent's height -->
     <div class="flex-1 min-h-0 flex flex-col">
-        <div class="flex-1 min-h-0 flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-500 rounded-xl border border-panel-border shadow-2xl shadow-primary/5 overflow-hidden bg-panel-fill">
-            
+
+        <!-- Standard Nexus Table View -->
+        <div id="tab-panel-history"
+            class="tab-panel tab-panel-content flex-1 min-h-0 flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-500 rounded-xl border border-panel-border shadow-2xl shadow-primary/5 overflow-hidden">
             <!-- PANEL HEADER -->
             <header class="flex-shrink-0 bg-panel-header border-b border-panel-border px-6 py-6 flex items-center justify-between">
                 <div class="flex items-center gap-4">
                     <div class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
-                        <i class="fas fa-history text-lg"></i>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
+                            </path>
+                        </svg>
                     </div>
                     <div>
-                        <h2 class="text-xl font-black tracking-tighter text-primary uppercase italic leading-none">Historial de Red</h2>
+                        <h2 class="text-xl font-black tracking-tighter text-primary uppercase italic leading-none">
+                            Historial de Red</h2>
                         <p class="text-[12px] text-primary/60 font-bold tracking-widest uppercase mt-0.5">Trazabilidad de Rendimiento / iperf3</p>
                     </div>
                 </div>
-                <button id="refreshHistory" class="nexus-btn nexus-btn-primary">
-                    <i class="fas fa-sync-alt mr-2"></i>
-                    <span>Refrescar</span>
-                </button>
             </header>
 
             <!-- PANEL BODY -->
             <main class="flex-1 min-h-0 flex flex-col overflow-hidden px-4 pt-3 pb-1">
                 <div class="flex-shrink-0 mb-3 mt-2 flex justify-between items-center gap-2">
                     <div class="relative group flex-grow max-w-md">
-                        <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-label/60 group-focus-within:text-primary transition-colors z-10"></i>
+                        <svg class="w-4 h-4 absolute left-5 top-1/2 -translate-y-1/2 text-label/60 group-focus-within:text-primary transition-colors z-10"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
                         <input type="text" id="historySearch" placeholder="Filtrar sesiones de red..."
                             class="w-full bg-input-bg border-2 border-panel-border rounded-xl pl-12 pr-5 py-3 text-sm font-bold text-input outline-none focus:border-input-focus focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-label/50">
                     </div>
+                    <button id="refreshHistory" class="nexus-btn nexus-btn-primary">
+                        <i class="fas fa-sync group-hover:rotate-180 transition-transform duration-500"></i>
+                        <span>Refrescar</span>
+                    </button>
                 </div>
-
-                <!-- TABLE AREA (DataTables handles this) -->
                 <div class="flex-1 min-h-0 flex flex-col">
-                    <table id="iperfHistoryTable" class="w-full text-left table-fixed dataTable">
-                        <thead>
+                    <table class="w-full text-left table-fixed dataTable">
+                        <thead class="sticky top-0 z-20">
                             <tr class="text-[12px] font-black text-white uppercase tracking-[0.2em]">
-                                <th>ID</th>
-                                <th>Estatus</th>
-                                <th>Protocolo</th>
-                                <th>Destino</th>
-                                <th>Resultado</th>
-                                <th>Fecha</th>
-                                <th>PDF</th>
+                                <th class="w-[8%] py-4 bg-slate-900/50 border-y border-panel-border text-left" style="border-left:3px solid transparent;padding:0 1.25rem 0 1rem;">ID</th>
+                                <th class="w-[12%] px-5 py-4 bg-slate-900/50 border-y border-panel-border text-center">Estatus</th>
+                                <th class="w-[10%] px-5 py-4 bg-slate-900/50 border-y border-panel-border text-center">Protocolo</th>
+                                <th class="w-[25%] px-5 py-4 bg-slate-900/50 border-y border-panel-border text-left">Destino</th>
+                                <th class="w-[15%] px-5 py-4 bg-slate-900/50 border-y border-panel-border text-center">Resultado</th>
+                                <th class="w-[20%] px-5 py-4 bg-slate-900/50 border-y border-panel-border text-center">Fecha</th>
+                                <th class="w-[10%] px-5 py-4 bg-slate-900/50 border-y border-panel-border text-center">PDF</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <!-- Injected by history.js -->
+                        <tbody id="historyTableBody">
+                            <!-- Injected by history.js (10 rows fixed) -->
                         </tbody>
                     </table>
                 </div>
@@ -66,6 +77,5 @@
     </div>
 </div>
 
-<!-- Scripts de DataTables (Nexus Style) -->
 <script src="{{ url_for('core.serve_assets', filename='js/history.js') }}"></script>
 {% endblock %}

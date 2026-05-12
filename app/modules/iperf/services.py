@@ -198,6 +198,44 @@ class IperfService:
                 group["lines"].append(data)
         
         flush_interval(current_db_session_id)
+        
+        # FINALIZACIÓN: Persistir resumen y estado final (Nexus Business Rules)
+        if current_db_session_id:
+            with app.app_context():
+                try:
+                    s = IperfSession.query.get(current_db_session_id)
+                    if s:
+                        # Si fue terminado por el sistema o natural
+                        if s.status == 'running':
+                            s.status = 'completed'
+                        
+                        s.ended_at = datetime.utcnow()
+                        
+                        # Guardar Resumen (si hay mediciones)
+                        live_data = IperfService._live_data.get(current_db_session_id)
+                        if live_data and live_data["measurements"]:
+                            meas = live_data["measurements"]
+                            vals = [m["gbps"] for m in meas]
+                            jitters = [m["jitter"] for m in meas]
+                            retxs = [m["retx"] for m in meas]
+                            
+                            summary = IperfSessionSummary(
+                                session_id=s.id,
+                                avg_gbps=sum(vals) / len(vals),
+                                max_gbps=max(vals),
+                                min_gbps=min(vals),
+                                avg_jitter_ms=sum(jitters) / len(jitters),
+                                total_retransmits=sum(retxs),
+                                total_samples=len(vals)
+                            )
+                            db.session.add(summary)
+                            # Marcar para que el frontend sepa que hay resumen nuevo
+                            live_data["summary"] = summary.to_dict()
+                            
+                        db.session.commit()
+                except Exception as e:
+                    print(f"Error finalizing session {current_db_session_id}: {e}")
+
         IperfService._finalize_session_memory(current_db_session_id)
 
     @staticmethod
@@ -219,16 +257,31 @@ class IperfService:
 
     @staticmethod
     def start_server(user_id, port=5201):
-        """Levanta iperf3 -s con limpieza agresiva (Business Rules)."""
+        """Levanta iperf3 -s con validación de concurrencia y limpieza agresiva (Rule #11)."""
         from flask import current_app
+        from app.modules.auth.models import User
         app = current_app._get_current_object()
         
-        # 1. Gestión Agresiva: Si está ocupado, intentamos liberar (Rule #8)
+        # 1. Validar si otro usuario está usando este puerto en la APP
+        existing_session = IperfSession.query.filter_by(status='running', port=port, mode='server').first()
+        if existing_session and existing_session.user_id != user_id:
+            owner = User.query.get(existing_session.user_id)
+            owner_name = owner.nombre if owner else "Otro Usuario"
+            return False, f"El puerto {port} ya está siendo utilizado por {owner_name}. Espera a que termine."
+
+        # 2. Gestión Agresiva: Si el puerto está ocupado (por nosotros o por sistema externo)
         if IperfService.port_is_listening(port):
             try:
+                # Si nosotros somos el dueño, o es un proceso huérfano, limpiamos
                 subprocess.run(["fuser", "-k", "-n", "tcp", str(port)], capture_output=True)
                 subprocess.run(["pkill", "-9", "iperf3"], capture_output=True)
-                # Esperar hasta 2s a que el puerto se libere realmente
+                # Si había una sesión DB de este usuario, la marcamos como abortada antes de crear la nueva
+                if existing_session:
+                    existing_session.status = 'aborted'
+                    existing_session.ended_at = datetime.utcnow()
+                    db.session.commit()
+                
+                # Esperar a que el puerto se libere
                 for _ in range(8):
                     time.sleep(0.25)
                     if not IperfService.port_is_listening(port):
@@ -236,9 +289,9 @@ class IperfService:
             except Exception as e:
                 print(f"Error en limpieza agresiva: {e}")
 
-        # 2. Verificar si el puerto sigue ocupado tras limpieza
+        # 3. Verificar si el puerto sigue ocupado tras limpieza
         if IperfService.port_is_listening(port):
-            return False, f"El puerto {port} sigue ocupado por otro proceso y no pudo ser liberado."
+            return False, f"El puerto {port} sigue bloqueado a nivel de sistema. Intenta con otro puerto."
 
         try:
             # Sesión inicial de "ESCUCHA"
@@ -258,19 +311,16 @@ class IperfService:
             
             threading.Thread(target=IperfService._iperf3_reader, args=(proc, "server", session_id, app, user_id), daemon=True).start()
             
-            # 3. Esperar a que NUESTRO proceso active el puerto
+            # 4. Esperar a que NUESTRO proceso active el puerto
             for _ in range(10):
                 time.sleep(0.3)
-                # Si el proceso murió, leer el error
                 if proc.poll() is not None:
                     error_msg = "Error desconocido"
                     try:
-                        # Intentamos leer la primera línea de lo que alcanzó a escupir
                         error_msg = proc.stdout.readline().strip()
                     except: pass
                     return False, f"Error al arrancar iperf3: {error_msg}"
                 
-                # Si el puerto ya responde, éxito
                 if IperfService.port_is_listening(port):
                     return True, f"Servidor iniciado exitosamente en el puerto {port}."
 
@@ -283,14 +333,17 @@ class IperfService:
         session = IperfSession.query.filter_by(user_id=user_id, status='running').order_by(IperfSession.id.desc()).first()
         if not session:
             return False, "No hay servidor activo para este usuario."
+        
+        session.status = 'aborted'
+        session.ended_at = datetime.utcnow()
+        db.session.commit()
+
         with IperfService._lock:
             proc = IperfService._active_procs.get(session.id)
             if proc:
                 proc.terminate()
                 return True, "Servidor detenido correctamente."
-        session.status = 'aborted'
-        session.ended_at = datetime.utcnow()
-        db.session.commit()
+        
         return True, "Estado del servidor limpiado."
 
     @staticmethod

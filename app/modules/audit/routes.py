@@ -1,11 +1,13 @@
 from flask import Blueprint, render_template, jsonify, current_app
 from flask_login import login_required, current_user
+from app.decorators import admin_required
 from .models import AuditLog
 
 audit_bp = Blueprint('audit', __name__, url_prefix='/audit')
 
 @audit_bp.route('/')
 @login_required
+@admin_required
 def index():
     try:
         return render_template('audit.html')
@@ -15,15 +17,10 @@ def index():
 
 @audit_bp.route('/api/list')
 @login_required
+@admin_required
 def list_audit():
     try:
-        # If not admin, filter by current username
-        if current_user.role != 'administrador':
-            query = AuditLog.query.filter_by(user=current_user.email)
-        else:
-            query = AuditLog.query
-
-        logs = query.order_by(AuditLog.timestamp.desc()).limit(500).all()
+        logs = AuditLog.query.order_by(AuditLog.timestamp.desc()).limit(500).all()
         
         return jsonify({
             "status": "success",

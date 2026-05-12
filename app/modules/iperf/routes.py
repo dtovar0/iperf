@@ -4,6 +4,7 @@ from app import db
 from app.modules.iperf.models import IperfTest, IperfSession, IperfMeasurement, IperfSessionSummary, IperfServerConfig
 from app.modules.iperf.services import IperfService
 from app.modules.iperf.report import generate_report
+from app.modules.audit.services import add_audit_log
 import io
 import os
 from functools import wraps
@@ -30,8 +31,13 @@ def require_api_token(f):
 @login_required
 def index():
     # El dashboard de Dash ahora maneja las rutas internas (/server, /client, /history)
-    # Redirigimos a la sub-ruta por defecto (server) para evitar bucles en la raíz
-    return redirect('/iperf/server')
+    # Redirigimos a la sub-ruta por defecto (live dashboard)
+    return redirect('/iperf/live/')
+
+@iperf_bp.route('/history')
+@login_required
+def history():
+    return render_template('iperf/history.html', is_dash_iperf=True)
 
 @iperf_bp.route('/api/history-list')
 @login_required
@@ -65,12 +71,18 @@ def history_list():
 @login_required
 def start_server():
     success, message = IperfService.start_server(current_user.id)
+    if success:
+        add_audit_log("INICIAR SERVIDOR", module="Iperf3", target="Local Server", status="success", description="Servidor iperf3 iniciado correctamente")
+    else:
+        add_audit_log("INICIAR SERVIDOR", module="Iperf3", target="Local Server", status="error", description=f"Fallo al iniciar servidor: {message}")
     return jsonify({'success': success, 'message': message})
 
 @iperf_bp.route('/stop-server', methods=['POST'])
 @login_required
 def stop_server():
     success, message = IperfService.stop_server(current_user.id)
+    if success:
+        add_audit_log("DETENER SERVIDOR", module="Iperf3", target="Local Server", status="warning", description="Servidor iperf3 detenido manualmente")
     return jsonify({'success': success, 'message': message})
 
 @iperf_bp.route('/server-status')
@@ -124,6 +136,8 @@ def download_report(session_id):
         jitter_vals,
         retx_vals
     )
+    
+    add_audit_log("DESCARGAR REPORTE", module="Iperf3", target=f"Sesión {session_id}", status="info", description=f"Reporte PDF generado para la sesión {session_id}")
     
     return send_file(
         io.BytesIO(pdf_bytes),

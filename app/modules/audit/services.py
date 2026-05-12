@@ -3,14 +3,13 @@ from app.modules.audit.models import AuditLog
 from flask import request
 from flask_login import current_user
 
-def add_audit_log(action, status='info', detail=None, user_override=None):
+def add_audit_log(action, module=None, target=None, description=None, status='success', user_override=None):
     """
     Registra un evento en la tabla de auditoría.
     """
     try:
-        user_name = user_override or (current_user.email if current_user.is_authenticated else 'SYSTEM')
+        user_name = user_override or (current_user.email if (hasattr(current_user, 'is_authenticated') and current_user.is_authenticated) else 'SYSTEM')
         
-        # Intentar obtener IP, si falla es porque es un proceso interno (Backend)
         ip = 'INTERNAL'
         try:
             from flask import has_request_context
@@ -22,8 +21,10 @@ def add_audit_log(action, status='info', detail=None, user_override=None):
         log = AuditLog(
             user=user_name,
             action=action,
+            module=module,
+            target=target,
+            description=description,
             status=status,
-            detail=detail,
             ip_address=ip
         )
         db.session.add(log)

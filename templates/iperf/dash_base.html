@@ -6,6 +6,7 @@
     {{ metas | safe }}
     {{ css | safe }}
     {{ favicon | safe }}
+    <link rel="stylesheet" href="{{ url_for('core.serve_assets', filename='css/dashboard.css') }}?v={{ range(1000, 9999) | random }}">
     <style>
         /* Asegurar que el contenido ocupe todo el espacio sin scroll vertical */
         #mainContent { 
@@ -41,13 +42,13 @@
     <p class="text-[12px] font-black text-label/40 uppercase tracking-[0.2em] px-3 mb-2 sidebar-text">Operaciones</p>
     <hr class="sidebar-divider">
     
-    <a href="/iperf/server" id="tab-server"
+    <a href="/iperf/live/" id="tab-server"
        class="nav-item gap-4 px-4 py-3 flex items-center rounded-xl text-primary bg-primary/5 border border-primary/10 transition-all group">
         <i class="fas fa-server w-5 text-center mr-3"></i>
         <span class="sidebar-text text-sm font-bold">SERVIDOR</span>
     </a>
     
-    <a href="/iperf/client" id="tab-client"
+    <a href="/iperf/live/client" id="tab-client"
        class="nav-item gap-4 px-4 py-3 flex items-center rounded-xl text-label hover:text-primary hover:bg-primary/5 transition-all group">
         <i class="fas fa-satellite-dish w-5 text-center mr-3"></i>
         <span class="sidebar-text text-sm font-bold">CLIENTE</span>
@@ -79,14 +80,18 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const links = document.querySelectorAll('#tab-server, #tab-client, #tab-history');
+        const links = document.querySelectorAll('#tab-server, #tab-client, #tab-history, #tab-servers');
+        const dashLinks = document.querySelectorAll('#tab-server, #tab-client'); // Only Dash links
         const activeClass = ['text-primary', 'bg-primary/5', 'border', 'border-primary/10'];
         const inactiveClass = ['text-label'];
 
         function updateActive() {
             const path = window.location.pathname;
             links.forEach(link => {
-                const isMatched = path.includes(link.getAttribute('href'));
+                const href = link.getAttribute('href');
+                const isMatched = (href === '/iperf/live/' && path === '/iperf/live/') || 
+                                 (href !== '/iperf/live/' && path.includes(href));
+                
                 if (isMatched) {
                     link.classList.add(...activeClass);
                     link.classList.remove(...inactiveClass);
@@ -97,8 +102,8 @@
             });
         }
 
-        // Interceptar clicks para evitar recarga
-        links.forEach(link => {
+        // Interceptar clicks SOLO para links de Dash
+        dashLinks.forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
                 const href = this.getAttribute('href');
@@ -110,6 +115,28 @@
 
         window.addEventListener('popstate', updateActive);
         updateActive();
+
+        // Nexus Premium: Modal Auto-Close Logic (10s)
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') {
+                    const modal = document.getElementById('modal-summary');
+                    if (modal && modal.classList.contains('modal-nexus-active')) {
+                        setTimeout(() => {
+                            if (modal.classList.contains('modal-nexus-active')) {
+                                modal.classList.replace('modal-nexus-active', 'hidden');
+                                modal.classList.remove('flex', 'items-center', 'justify-center', 'fixed', 'inset-0');
+                            }
+                        }, 10000); // 10 Segundos
+                    }
+                }
+            });
+        });
+
+        const modalEl = document.getElementById('modal-summary');
+        if (modalEl) {
+            observer.observe(modalEl, { attributes: true });
+        }
     });
 </script>
 {% endblock %}

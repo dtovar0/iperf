@@ -13,7 +13,7 @@ import traceback
 from app.modules.iperf.services import IperfService
 from app.modules.iperf.dashboard_v2.debug_logger import debug_logger
 from app.modules.iperf.models import IperfSession
-from app.modules.iperf.dashboard_v2.state import timestamps, recv_mbps, jitter_ms, retransmits, log_lines, lock as state_lock
+from app.modules.iperf.dashboard_v2.state import timestamps, recv_mbps, jitter_ms, retransmits, log_lines, lock as state_lock, clear_buffers
 import plotly.graph_objs as go
 
 # Cache de sesión para evitar queries excesivas
@@ -316,6 +316,18 @@ def _make_event_toast(title, msg, type="info", ts=None):
 
 
 def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retransmits, log_lines, empty_graph):
+    
+    def find_available_port():
+        """Busca el primer puerto libre en el rango 5201-5210."""
+        from app.modules.iperf.models import IperfSession
+        for p in range(5201, 5211):
+            # 1. Validar a nivel de Socket (Sistema)
+            if not IperfService.port_is_listening(p):
+                # 2. Validar a nivel de DB (Nuestra App)
+                existing = IperfSession.query.filter_by(status='running', port=p, mode='server').first()
+                if not existing:
+                    return p
+        return None
 
     # ─── NAVEGACIÓN SPA ───────────────────────────────────────────────────────
     @dash_app.callback(
@@ -330,12 +342,10 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
             ON  = "flex-1 min-h-0 flex flex-col animate-in fade-in duration-500 overflow-hidden"
             OFF = "hidden"
             path = (pathname or "").rstrip("/")
-            if path in ("/iperf/server", "/iperf", ""):
+            if path in ("/iperf/live", "/iperf/live/server"):
                 return ON, OFF, OFF
-            if path == "/iperf/client":
+            if path == "/iperf/live/client":
                 return OFF, ON, OFF
-            if path == "/iperf/history":
-                return OFF, OFF, ON
             return ON, OFF, OFF
         except Exception as e:
             debug_logger.error(f"switch_tabs: {e}\n{traceback.format_exc()}")
@@ -350,36 +360,37 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
          Output("srv-toggle-text",  "children"),
          Output("srv-toggle-icon",  "className"),
          Output("btn-srv-toggle",   "className"),
-         Output("toast-trigger",    "data", allow_duplicate=True)],
+         Output("toast-trigger",    "data"),
+         Output("modal-busy",       "className"),
+         Output("modal-busy-msg",   "children"),
+         Output("modal-busy-suggested", "children")],
         Input("btn-srv-toggle", "n_clicks"),
-        [State("srv-port", "value"),
-         State("srv-toggle-text", "children")],
+        State("srv-port", "value"),
         prevent_initial_call=True,
     )
-    def toggle_server(n_clicks, srv_port, current_text):
+    def toggle_server(n, port):
+        if not n: return (no_update,) * 11
         try:
-            if not n_clicks: return (no_update,) * 8
-            port = srv_port or 5201
-            
-            if current_text == "INICIAR":
-                ok, msg = IperfService.start_server(current_user.id, port)
-                toast = {"title": "SERVIDOR IPERF3", "msg": msg, "type": "success" if ok else "error", "ts": time.time()}
-                if ok:
-                    return (
-                        "ACTIVO", "text-[10px] font-black uppercase tracking-widest text-emerald-500",
-                        "w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]",
-                        "flex items-center gap-3 px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/5",
-                        "DETENER", "fas fa-stop mr-2",
-                        "bg-rose-500 text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center",
-                        toast
-                    )
+            if not IperfService.is_server_running(current_user.id):
+                success, msg = IperfService.start_server(current_user.id, port=port)
+                
+                if not success and "utilizado por" in msg:
+                    suggested = find_available_port()
+                    return (no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update,
+                            "modal-nexus-active fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md",
+                            msg, str(suggested if suggested else "5201"))
+
+                toast = {"title": "SERVIDOR IPERF3", "msg": msg, "type": "success" if success else "error", "ts": time.time()}
                 return (
-                    "OCUPADO", "text-[10px] font-black uppercase tracking-widest text-amber-500",
-                    "w-2 h-2 rounded-full bg-amber-500",
-                    "flex items-center gap-3 px-4 py-2 rounded-xl border border-amber-500/30 bg-amber-500/5",
-                    "INICIAR", "fas fa-play mr-2",
-                    "bg-primary text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center",
-                    toast
+                    "ONLINE" if success else "ERROR", 
+                    "text-[10px] font-black uppercase tracking-widest text-primary" if success else "text-[10px] font-black uppercase tracking-widest text-rose-500",
+                    "w-2 h-2 rounded-full bg-primary animate-pulse" if success else "w-2 h-2 rounded-full bg-rose-500",
+                    "flex items-center gap-3 px-4 py-2 rounded-xl border border-primary/20 bg-primary/10 shadow-[0_0_20px_rgba(37,99,235,0.2)]" if success else "flex items-center gap-3 px-4 py-2 rounded-xl border border-rose-500/20 bg-rose-500/10",
+                    "DETENER" if success else "REINTENTAR", 
+                    "fas fa-stop mr-2" if success else "fas fa-sync mr-2",
+                    "bg-rose-500 text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center" if success else "bg-primary text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center",
+                    toast,
+                    "hidden", "", ""
                 )
             else:
                 IperfService.stop_server(current_user.id)
@@ -390,11 +401,20 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
                     "flex items-center gap-3 px-4 py-2 rounded-xl border border-white/5 bg-white/5",
                     "INICIAR", "fas fa-play mr-2",
                     "bg-primary text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center",
-                    toast
+                    toast,
+                    "hidden", "", ""
                 )
         except Exception as e:
             debug_logger.error(f"toggle_server: {e}\n{traceback.format_exc()}")
-            return (no_update,) * 8
+            return (no_update,) * 11
+
+    @dash_app.callback(
+        Output("modal-busy", "className", allow_duplicate=True),
+        Input("btn-modal-busy-close", "n_clicks"),
+        prevent_initial_call=True
+    )
+    def close_busy_modal(n):
+        return "hidden"
 
     @dash_app.callback(
         [Output("bw-chart",            "figure"),
@@ -405,10 +425,11 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
          Output("last-update",         "children"),
          Output("modal-summary",       "className"),
          Output("modal-msg",           "children"),
-         Output("modal-download-link", "href")],
+         Output("modal-download-link", "href"),
+         Output("toast-trigger",       "data", allow_duplicate=True)],
         Input("interval-update", "n_intervals"),
         State("ui-state", "data"),
-        prevent_initial_call=False,
+        prevent_initial_call=True,
     )
     def update_server(n, ui_state):
         try:
@@ -416,60 +437,106 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
                 return (_empty_fig("LOGIN"), _empty_fig("LOGIN"),
                         "0.00", "0.000",
                         "", datetime.now().strftime('%H:%M:%S'),
-                        "hidden", "", "#")
+                        "hidden", "", "#", no_update)
 
-            # 1. Obtener Datos del Estado Global (1:1 con test/app.py)
-            with state_lock:
-                ts   = list(timestamps)
-                y_bw_mbps = list(recv_mbps)
-                y_jit  = list(jitter_ms)
-                y_retx = list(retransmits)
-                raw_lines = list(log_lines)
+            # 1. Buscar sesión de servidor activa para este usuario
+            from app.modules.iperf.models import IperfSession
+            s = IperfSession.query.filter_by(user_id=current_user.id, mode="server", status='running').order_by(IperfSession.id.desc()).first()
             
-            # Convertir Mbps a Gbps para el label (Nexus Style)
-            y_bw_gbps = [round(v / 1000, 4) for v in y_bw_mbps]
-
-            # Link de reporte (Cache)
-            now = time.time()
-            if now - _session_cache["last_query"] > 5:
+            # Si no hay una corriendo, buscamos la más reciente terminada para mostrar el modal si es necesario
+            if not s:
                 s = IperfSession.query.filter_by(user_id=current_user.id, mode="server").order_by(IperfSession.id.desc()).first()
-                if s: _session_cache["session"] = s
-                _session_cache["last_query"] = now
-            
-            s = _session_cache["session"]
-            report_url = f"/iperf/report/{s.id}" if s else "#"
 
-            # 2. Logs
+            live = IperfService._live_data.get(s.id) if s else None
+            
+            if not live or not live.get("measurements"):
+                # Si no hay datos live, verificamos si hay que mostrar el modal de una sesión recién terminada
+                modal_class = "hidden"
+                modal_msg = ""
+                toast_data = no_update
+                
+                with state_lock:
+                    if live and live.get("summary"):
+                        summary_data = live.pop("summary")
+                        modal_class = "modal-nexus-active fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md"
+                        modal_msg = f"Prueba finalizada con éxito. Host: {s.host or 'Local'}"
+                        IperfService._notified_sessions.add(s.id)
+                        IperfService.stop_server(current_user.id)
+                        IperfService.clear_buffers(current_user.id)
+
+                fig_label = "ESCUCHANDO..." if IperfService.is_server_running(current_user.id) else "SIN SEÑAL"
+                return (_empty_fig(fig_label), _empty_fig(fig_label),
+                        "0.00", "0.000",
+                        _make_empty_log(), datetime.now().strftime('%H:%M:%S'),
+                        modal_class, modal_msg, f"/iperf/report/{s.id}" if s else "#", toast_data)
+
+            # 2. Extraer datos de la sesión aislada
+            with state_lock:
+                meas = live["measurements"][-MAX_POINTS:]
+                ts = [m.get("ts", "") for m in meas]
+                y_bw_gbps = [m.get("gbps", 0) for m in meas]
+                y_jit = [m.get("jitter", 0) for m in meas]
+                raw_lines = live.get("logs", [])[-100:]
+
+            # 3. Validar estado de finalización (NUEVA LÓGICA BASADA EN LIVE DATA)
+            modal_class = "hidden"
+            modal_msg = ""
+            toast_data = no_update
+
+            # Solo mostramos el modal si detectamos un resumen RECIÉN generado en memoria (Rule #10)
+            with state_lock:
+                live = IperfService._live_data.get(s.id) if s else None
+                if live and live.get("summary"):
+                    # Consumir el resumen para que no se repita el modal
+                    summary_data = live.pop("summary") 
+                    modal_class = "modal-nexus-active fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md"
+                    modal_msg = f"Prueba finalizada con éxito. Host: {s.host or 'Local'}"
+                    
+                    # Log de auditoría de fin de prueba
+                    IperfService._notified_sessions.add(s.id)
+                    
+                    # LIMPIEZA AGRESIVA POST-TEST (Rule #10)
+                    IperfService.stop_server(current_user.id)
+                    IperfService.clear_buffers(current_user.id)
+                    
+                    # Forzamos vaciado de variables locales para el return de este frame
+                    y_bw_gbps = []
+                    y_jit = []
+                    raw_lines = ["[NEXUS] Sesión finalizada. Resultados guardados."]
+
+                # Si el proceso fue abortado (cancelado por el usuario), s.status será 'aborted'
+                elif s and s.status == 'aborted' and s.id not in IperfService._notified_sessions:
+                    IperfService._notified_sessions.add(s.id)
+                    toast_data = {"title": "TEST INTERRUMPIDO", "msg": "El proceso fue cancelado o se perdió la conexión.", "type": "warning", "ts": time.time()}
+                    IperfService.stop_server(current_user.id)
+
+            # 4. Logs
             log_text = "\n".join(raw_lines)
             log_el = html.Pre(log_text, id="log-output", className="text-emerald-400 leading-relaxed whitespace-pre-wrap") if raw_lines else _make_empty_log()
 
-            # 3. Validar datos
+            # 5. Validar datos
             if not y_bw_gbps:
                 fig_label = "ESCUCHANDO..." if IperfService.is_server_running(current_user.id) else "SIN SEÑAL"
                 return (_empty_fig(fig_label), _empty_fig(fig_label),
                         "0.00", "0.000",
                         log_el, datetime.now().strftime('%H:%M:%S'),
-                        "hidden", "", report_url)
+                        modal_class, modal_msg, report_url, toast_data)
 
-            # 4. Graficar
+            # 6. Graficar
             bw_fig     = _make_fig(ts, y_bw_gbps,  "0, 212, 255")
             jitter_fig = _make_fig(ts, y_jit, "255, 209, 102")
-            retx_fig   = _make_bar_fig(ts, y_retx, "#ff6b6b")
             
             cur_bw     = f"{y_bw_gbps[-1]:.2f}"
             cur_jit    = f"{y_jit[-1]:.3f}"
-            cur_retx   = str(y_retx[-1])
-            total_retx = str(sum(y_retx))
-            samples    = str(len(y_bw_gbps))
 
             return (bw_fig, jitter_fig,
                     cur_bw, cur_jit,
                     log_el, datetime.now().strftime('%H:%M:%S'),
-                    "hidden", "", report_url)
+                    modal_class, modal_msg, f"/iperf/report/{s.id}" if s else "#", toast_data)
 
         except Exception as e:
             debug_logger.error(f"update_server: {e}\n{traceback.format_exc()}")
-            return (no_update,) * 9
+            return (no_update,) * 10
 
     # ─── CONTROL CLIENTE ──────────────────────────────────────────────────────
     @dash_app.callback(
@@ -508,6 +575,7 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
             if not n_clicks: return (no_update,) * 7
             
             if current_text == "EJECUTAR TEST":
+                clear_buffers()
                 from flask import current_app
                 from app.modules.iperf.models import IperfSession
                 import subprocess, threading
@@ -583,16 +651,21 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
          Output("cli-current-bw-chart",  "children"),
          Output("cli-stat-jitter-chart", "children"),
          Output("cli-log-container",     "children"),
-         Output("cli-last-update",       "children")],
+         Output("cli-last-update",       "children"),
+         Output("modal-summary",       "className", allow_duplicate=True),
+         Output("modal-msg",           "children", allow_duplicate=True),
+         Output("modal-download-link", "href", allow_duplicate=True),
+         Output("toast-trigger",       "data", allow_duplicate=True)],
         Input("interval-update", "n_intervals"),
-        prevent_initial_call=False,
+        prevent_initial_call=True,
     )
     def update_client(n):
         try:
             if not current_user.is_authenticated:
                 return (_empty_fig("LOGIN"), _empty_fig("LOGIN"),
                         "0.00", "0.000",
-                        "", datetime.now().strftime('%H:%M:%S'))
+                        "", datetime.now().strftime('%H:%M:%S'),
+                        "hidden", "", "#", no_update)
 
             # Buscar sesión de cliente más reciente con datos en _live_data
             from app.modules.iperf.models import IperfSession
@@ -618,12 +691,37 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
             if not live or not live.get("measurements"):
                 return (_empty_fig("SIN SEÑAL"), _empty_fig("STANDBY"),
                         "0.00", "0.000",
-                        no_data_log, datetime.now().strftime('%H:%M:%S'))
+                        no_data_log, datetime.now().strftime('%H:%M:%S'),
+                        "hidden", "", "#", no_update)
 
             meas     = live["measurements"][-MAX_POINTS:]
             x        = [m.get("ts", str(m.get("t1", i))) for i, m in enumerate(meas)]
             y_bw     = [float(m.get("gbps",   0)) for m in meas]
             y_jitter = [float(m.get("jitter", 0)) for m in meas]
+            # 3. Finalización (NUEVA LÓGICA BASADA EN LIVE DATA)
+            modal_class = "hidden"
+            modal_msg = ""
+            toast_data = no_update
+
+            with state_lock:
+                live_s = IperfService._live_data.get(session.id) if session else None
+                if live_s and live_s.get("summary"):
+                    # Consumir resumen
+                    live_s.pop("summary")
+                    modal_class = "modal-nexus-active fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md"
+                    modal_msg = f"Prueba de cliente finalizada. Destino: {session.host}"
+                    IperfService._notified_sessions.add(session.id)
+                    
+                    # LIMPIEZA AGRESIVA POST-TEST (Rule #10)
+                    IperfService.clear_buffers(current_user.id)
+                    
+                    # Forzamos vaciado local
+                    y_bw = []
+                    y_jitter = []
+                    live_s["logs"] = ["[NEXUS] Test de cliente completado."]
+                elif session and session.status == 'aborted' and session.id not in IperfService._notified_sessions:
+                    IperfService._notified_sessions.add(session.id)
+                    toast_data = {"title": "TEST INTERRUMPIDO", "msg": "El test de cliente fue cancelado.", "type": "warning", "ts": time.time()}
 
             bw_fig     = _make_fig(x, y_bw,     "37, 99, 235")
             jitter_fig = _make_fig(x, y_jitter, "245, 158, 11")
@@ -636,17 +734,17 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
                 id="cli-log-output",
                 className="text-emerald-400 leading-relaxed whitespace-pre-wrap",
             ) if logs else _make_empty_log("TEST ACTIVO • CAPTURANDO LOGS...")
-            sub = (f"TRANSMISIÓN ACTIVA"
-                   f" — {session.host if session else 'LOCALHOST'}"
-                   f" · {len(meas)} MUESTRAS")
+            
+            report_url = f"/iperf/report/{session.id}"
 
             return (bw_fig, jitter_fig,
                     cur_bw, cur_jit,
-                    log_el, datetime.now().strftime('%H:%M:%S'))
+                    log_el, datetime.now().strftime('%H:%M:%S'),
+                    modal_class, modal_msg, report_url, toast_data)
 
         except Exception as e:
             debug_logger.error(f"update_client: {e}\n{traceback.format_exc()}")
-            return (no_update,) * 6
+            return (no_update,) * 10
 
     @dash_app.callback(
         [Output("cli-proto", "value"),
@@ -742,9 +840,11 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
                 return [html.Tr([html.Td("Usuario no autenticado", colSpan=7,
                                          className="py-10 text-center text-label/20 font-black italic")])]
 
-            sessions = (IperfSession.query
-                        .filter_by(user_id=current_user.id)
-                        .order_by(IperfSession.id.desc())
+            query = IperfSession.query
+            if current_user.role != 'administrador':
+                query = query.filter_by(user_id=current_user.id)
+                
+            sessions = (query.order_by(IperfSession.id.desc())
                         .limit(50).all())
 
             if not sessions:
@@ -789,12 +889,12 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
     # ─── NOTIFICACIONES TOAST ──────────────────────────────────────────────────
     @dash_app.callback(
         Output("toast-container", "children"),
-        [Input("interval-update", "n_intervals"),
-         Input("toast-trigger",    "data")],
+        [Input("toast-trigger",    "data"),
+         Input("interval-update", "n_intervals")],
         State("toast-container", "children"),
-        prevent_initial_call=False,
+        prevent_initial_call=True,
     )
-    def trigger_notifications(n, trigger_data, current_toasts):
+    def trigger_notifications(trigger_data, n_intervals, current_toasts):
         try:
             if not current_user.is_authenticated:
                 return []

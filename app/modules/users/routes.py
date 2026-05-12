@@ -61,7 +61,7 @@ def add_user():
         db.session.add(new_user)
         db.session.commit()
         
-        add_audit_log(f"CREAR USUARIO: {email}", status="success", detail=f"Usuario {nombre} creado manualmente")
+        add_audit_log(f"CREAR USUARIO: {email}", module="Usuarios", target=email, status="success", description=f"Usuario {nombre} creado manualmente")
         
         return jsonify({"success": True})
     except Exception as e:
@@ -92,7 +92,7 @@ def edit_user(user_id):
         new_password = request.form.get('password', '').strip()
         if new_password and user.auth_source == 'local':
             user.set_password(new_password)
-            add_audit_log(f"CAMBIO PASSWORD: {user.email}", status="warning", detail=f"Contraseña actualizada para {user.email}")
+            add_audit_log(f"CAMBIO PASSWORD: {user.email}", module="Usuarios", target=user.email, status="warning", description=f"Contraseña actualizada para {user.email}")
 
         db.session.commit()
         
@@ -100,7 +100,7 @@ def edit_user(user_id):
         if current_user.is_authenticated and user.id == current_user.id:
             login_user(user, remember=True)
 
-        add_audit_log(f"MODIFICAR USUARIO: {user.email}", status="success", detail=f"Perfil de usuario actualizado")
+        add_audit_log(f"MODIFICAR USUARIO: {user.email}", module="Usuarios", target=user.email, status="success", description=f"Perfil de usuario actualizado")
         
         return jsonify({"success": True})
     except Exception as e:
@@ -123,7 +123,7 @@ def delete_user(user_id):
         db.session.delete(user)
         db.session.commit()
         
-        add_audit_log(f"ELIMINAR USUARIO: {email}", status="warning", detail=f"Usuario eliminado del sistema")
+        add_audit_log(f"ELIMINAR USUARIO: {email}", module="Usuarios", target=email, status="warning", description=f"Usuario eliminado del sistema")
         
         return jsonify({"success": True})
     except Exception as e:
