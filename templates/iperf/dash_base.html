@@ -43,9 +43,10 @@
     <hr class="sidebar-divider">
     
     <a href="/iperf/live/" id="tab-server"
-       class="nav-item gap-4 px-4 py-3 flex items-center rounded-xl text-primary bg-primary/5 border border-primary/10 transition-all group">
+       class="nav-item gap-4 px-4 py-3 flex items-center rounded-xl text-primary bg-primary/5 border border-primary/10 transition-all group relative">
         <i class="fas fa-server w-5 text-center mr-3"></i>
         <span class="sidebar-text text-sm font-bold">SERVIDOR</span>
+        <span id="sidebar-srv-dot" class="w-2 h-2 rounded-full bg-slate-500 ml-auto sidebar-text"></span>
     </a>
     
     <a href="/iperf/live/client" id="tab-client"
@@ -54,7 +55,7 @@
         <span class="sidebar-text text-sm font-bold">CLIENTE</span>
     </a>
     
-    <a href="/iperf/history" id="tab-history"
+    <a href="/iperf/live/history" id="tab-history"
        class="nav-item gap-4 px-4 py-3 flex items-center rounded-xl text-label hover:text-primary hover:bg-primary/5 transition-all group">
         <i class="fas fa-history w-5 text-center mr-3"></i>
         <span class="sidebar-text text-sm font-bold">HISTORIAL</span>
@@ -81,7 +82,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const links = document.querySelectorAll('#tab-server, #tab-client, #tab-history, #tab-servers');
-        const dashLinks = document.querySelectorAll('#tab-server, #tab-client'); // Only Dash links
+        const dashLinks = document.querySelectorAll('#tab-server, #tab-client, #tab-history'); // All Dash SPA links
         const activeClass = ['text-primary', 'bg-primary/5', 'border', 'border-primary/10'];
         const inactiveClass = ['text-label'];
 
@@ -89,8 +90,8 @@
             const path = window.location.pathname;
             links.forEach(link => {
                 const href = link.getAttribute('href');
-                const isMatched = (href === '/iperf/live/' && path === '/iperf/live/') || 
-                                 (href !== '/iperf/live/' && path.includes(href));
+                const isMatched = (href === '/iperf/live/' && (path === '/iperf/live/' || path === '/iperf/live')) || 
+                                 (href !== '/iperf/live/' && path.startsWith(href));
                 
                 if (isMatched) {
                     link.classList.add(...activeClass);

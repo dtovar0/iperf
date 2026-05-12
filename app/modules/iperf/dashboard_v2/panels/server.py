@@ -100,7 +100,7 @@ def get_server_panel():
                     ]),
                     html.Div(className="flex-shrink-0 p-4 border-t border-white/5 bg-white/5 flex justify-between items-center", children=[
                         html.Span("iperf3 engine v3.16", className="text-2xs font-black text-slate-400"),
-                        html.Span(id="last-update", className="hidden")
+                        html.Span(id="last-update", children="--:--:--", className="iperf-last-update")
                     ])
                 ])
             ])

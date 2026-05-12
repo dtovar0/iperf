@@ -12,7 +12,7 @@ def get_client_panel():
             ]),
         ]),
 
-        # FILA 1: CONTROLES
+        # FILA 1: CONTROLES PRINCIPALES (Audit #1 — Línea principal limpia)
         html.Div(className="flex-shrink-0 flex items-center gap-4 p-4 bg-panel-fill border border-panel-border rounded-panel shadow-sm", children=[
             # Host
             html.Div(className="flex items-center gap-2", children=[
@@ -28,27 +28,6 @@ def get_client_panel():
                           className="iperf-input w-20")
             ]),
 
-            # Duración
-            html.Div(className="flex items-center gap-2", children=[
-                html.Label("TIME", className="text-2xs font-black text-label/40 tracking-widest"),
-                dcc.Input(id="cli-duration", type="number", value=10, 
-                          className="iperf-input w-16")
-            ]),
-
-            # Paralelo
-            html.Div(className="flex items-center gap-2", children=[
-                html.Label("STRM", className="text-2xs font-black text-label/40 tracking-widest"),
-                dcc.Input(id="cli-parallel", type="number", value=1, min=1, max=128, 
-                          className="iperf-input w-14")
-            ]),
-
-            # Bitrate
-            html.Div(className="flex items-center gap-2", children=[
-                html.Label("RATE", className="text-2xs font-black text-label/40 tracking-widest"),
-                dcc.Input(id="cli-bitrate", type="text", placeholder="MAX", 
-                          className="iperf-input w-20")
-            ]),
-
             # Protocolo (Custom Premium Toggle)
             html.Div(className="flex items-center gap-2", children=[
                 html.Label("PROTO", className="text-2xs font-black text-label/40 tracking-widest"),
@@ -60,7 +39,28 @@ def get_client_panel():
                 dcc.Input(id="cli-proto", value="tcp", className="hidden")
             ]),
 
-            html.Div(className="w-px h-8 bg-panel-border/30 mx-2"),
+            html.Div(className="w-px h-8 bg-panel-border/30 mx-1"),
+
+            # Parámetros Avanzados (Audit #1 — Agrupados)
+            html.Div(className="flex items-center gap-3 px-3 py-1 rounded-lg bg-white/[0.02] border border-white/5", children=[
+                html.Div(className="flex items-center gap-2", children=[
+                    html.Label("TIME", className="text-2xs font-black text-label/40 tracking-widest"),
+                    dcc.Input(id="cli-duration", type="number", value=10, 
+                              className="iperf-input w-16")
+                ]),
+                html.Div(className="flex items-center gap-2", children=[
+                    html.Label("FLUJOS", className="text-2xs font-black text-label/40 tracking-widest"),
+                    dcc.Input(id="cli-parallel", type="number", value=1, min=1, max=128, 
+                              className="iperf-input w-14")
+                ]),
+                html.Div(className="flex items-center gap-2", children=[
+                    html.Label("RATE", className="text-2xs font-black text-label/40 tracking-widest"),
+                    dcc.Input(id="cli-bitrate", type="text", placeholder="MAX", 
+                              className="iperf-input w-20")
+                ]),
+            ]),
+
+            html.Div(className="w-px h-8 bg-panel-border/30 mx-1"),
 
             # Acción
             html.Button(
@@ -70,9 +70,9 @@ def get_client_panel():
 
             html.Div(className="flex-1"),
             
-            # Estado
-            html.Div(id="cli-status-card", className="flex items-center gap-3 px-4 py-2 rounded-base border border-panel-border/30 bg-surface-container/30", children=[
-                html.Div(className="w-2 h-2 rounded-full bg-slate-500"),
+            # Estado (Audit #3 — dot con ID dinámico)
+            html.Div(id="cli-status-card", className="flex items-center gap-3 px-4 py-2 rounded-xl border border-panel-border/30 bg-surface-container/30", children=[
+                html.Div(id="cli-status-dot", className="w-2 h-2 rounded-full bg-slate-500"),
                 html.Span(id="cli-status-label", children="STANDBY", className="text-2xs font-black uppercase tracking-widest")
             ])
         ]),
@@ -109,9 +109,10 @@ def get_client_panel():
                     html.Div(id="cli-log-container", className="flex-1 p-6 overflow-y-auto font-mono text-sm custom-scrollbar bg-black/20", children=[
                         html.Pre(id="cli-log-output", className="text-emerald-400 leading-relaxed", children="[NEXUS] Iniciando telemetría...")
                     ]),
+                    # Footer con timestamp visible (Audit #5)
                     html.Div(className="flex-shrink-0 p-4 border-t border-white/5 bg-white/5 flex justify-between items-center", children=[
                         html.Span("iperf3 engine v3.16", className="text-2xs font-black text-slate-400"),
-                        html.Span(id="cli-last-update", className="hidden")
+                        html.Span(id="cli-last-update", children="--:--:--", className="iperf-last-update")
                     ])
                 ])
             ])

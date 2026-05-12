@@ -32,7 +32,7 @@ def chart_card(title, icon_cls, accent_color, stat_id, stat_unit, graph_id):
                         html.Span(title, className="text-2xs font-black uppercase tracking-[0.2em] text-label/60"),
                     ]),
                     html.Div(className="flex items-baseline gap-1", children=[
-                        html.Span(id=stat_id, className="text-xl font-black italic text-primary", children="0.00"),
+                        html.Span(id=stat_id, className="text-xl font-black italic text-primary iperf-stat-value", children="0.00"),
                         html.Span(stat_unit, className="text-2xs font-black text-label/20"),
                     ]),
                 ],

@@ -157,24 +157,24 @@ def _make_empty_log(msg="ESPERANDO TRANSMISIÓN..."):
 def _empty_fig(label=""):
     fig = go.Figure()
     
-    # Configuración de estilo premium sólido
+    # Configuración de estilo premium sólido (Audit #10 — Unicode neutral)
     # NOTE: Plotly no soporta CSS vars — estos hex mapean a tokens:
     #   #64748b = --color-secondary (Slate-500)
     #   #2563eb = --color-primary (Blue-600)
     #   #94a3b8 = Slate-400 (muted text)
     color = "#64748b"  # → --color-secondary
-    icon = "📊"
+    icon = "◈"
     subtext = "EL SISTEMA ESTÁ LISTO PARA RECIBIR DATOS"
     
     if "ESCUCHANDO" in label:
-        icon = "📡"
+        icon = "◉"
         color = "#2563eb"  # → --color-primary
         subtext = "PUERTO ABIERTO • ESPERANDO TRANSMISIÓN..."
     elif "STANDBY" in label or "SIN SEÑAL" in label:
-        icon = "💤"
+        icon = "◇"
         subtext = "SISTEMA EN REPOSO • LISTO PARA MONITOREAR"
     elif "LOGIN" in label:
-        icon = "🔒"
+        icon = "◆"
         subtext = "AUTENTICACIÓN REQUERIDA"
 
     fig.update_layout(
@@ -346,12 +346,14 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
                 return ON, OFF, OFF
             if path == "/iperf/live/client":
                 return OFF, ON, OFF
+            if path == "/iperf/live/history":
+                return OFF, OFF, ON
             return ON, OFF, OFF
         except Exception as e:
             debug_logger.error(f"switch_tabs: {e}\n{traceback.format_exc()}")
             return no_update, no_update, no_update
 
-    # ─── CONTROL SERVIDOR ─────────────────────────────────────────────────────
+    # ─── CONTROL SERVIDOR (Audit #2 — Semantic CSS classes) ─────────────────────
     @dash_app.callback(
         [Output("srv-status-label", "children"),
          Output("srv-status-label", "className"),
@@ -370,10 +372,16 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
     )
     def toggle_server(n, port):
         if not n: return (no_update,) * 11
+        
+        # Estado semántico reutilizable (Audit #2)
+        LABEL_CLS = "text-[10px] font-black uppercase tracking-widest"
+        STATUS_BASE = "flex items-center gap-3 px-4 py-2 rounded-xl border"
+        
         try:
             if not IperfService.is_server_running(current_user.id):
                 success, msg = IperfService.start_server(current_user.id, port=port)
                 
+                # Caso: Puerto ocupado por otro usuario
                 if not success and "utilizado por" in msg:
                     suggested = find_available_port()
                     return (no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update,
@@ -381,33 +389,40 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
                             msg, str(suggested if suggested else "5201"))
 
                 toast = {"title": "SERVIDOR IPERF3", "msg": msg, "type": "success" if success else "error", "ts": time.time()}
-                return (
-                    "ONLINE" if success else "ERROR", 
-                    "text-[10px] font-black uppercase tracking-widest text-primary" if success else "text-[10px] font-black uppercase tracking-widest text-rose-500",
-                    "w-2 h-2 rounded-full bg-primary animate-pulse" if success else "w-2 h-2 rounded-full bg-rose-500",
-                    "flex items-center gap-3 px-4 py-2 rounded-xl border border-primary/20 bg-primary/10 shadow-[0_0_20px_rgba(37,99,235,0.2)]" if success else "flex items-center gap-3 px-4 py-2 rounded-xl border border-rose-500/20 bg-rose-500/10",
-                    "DETENER" if success else "REINTENTAR", 
-                    "fas fa-stop mr-2" if success else "fas fa-sync mr-2",
-                    "bg-rose-500 text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center" if success else "bg-primary text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center",
-                    toast,
-                    "hidden", "", ""
-                )
+                if success:
+                    return (
+                        "ONLINE", f"{LABEL_CLS} text-primary",
+                        "w-2 h-2 rounded-full bg-primary animate-pulse",
+                        f"{STATUS_BASE} iperf-status--online",
+                        "DETENER", "fas fa-stop mr-2",
+                        "iperf-btn--active",
+                        toast, "hidden", "", ""
+                    )
+                else:
+                    return (
+                        "ERROR", f"{LABEL_CLS} text-rose-500",
+                        "w-2 h-2 rounded-full bg-rose-500",
+                        f"{STATUS_BASE} iperf-status--error",
+                        "REINTENTAR", "fas fa-sync mr-2",
+                        "iperf-btn--error",
+                        toast, "hidden", "", ""
+                    )
             else:
                 IperfService.stop_server(current_user.id)
                 toast = {"title": "SERVIDOR IPERF3", "msg": "Servidor detenido manualmente.", "type": "info", "ts": time.time()}
                 return (
-                    "STANDBY", "text-[10px] font-black uppercase tracking-widest text-label/40",
+                    "STANDBY", f"{LABEL_CLS} text-label/40",
                     "w-2 h-2 rounded-full bg-slate-500",
-                    "flex items-center gap-3 px-4 py-2 rounded-xl border border-white/5 bg-white/5",
+                    f"{STATUS_BASE} iperf-status--standby",
                     "INICIAR", "fas fa-play mr-2",
-                    "bg-primary text-white px-8 py-3 rounded-xl font-black text-xs tracking-widest hover:scale-105 transition-all flex items-center",
-                    toast,
-                    "hidden", "", ""
+                    "iperf-btn-action",
+                    toast, "hidden", "", ""
                 )
         except Exception as e:
             debug_logger.error(f"toggle_server: {e}\n{traceback.format_exc()}")
             return (no_update,) * 11
 
+    # ─── MODAL BUSY: Cerrar (Audit #9) ───────────────────────────────────────
     @dash_app.callback(
         Output("modal-busy", "className", allow_duplicate=True),
         Input("btn-modal-busy-close", "n_clicks"),
@@ -415,6 +430,35 @@ def register_callbacks(dash_app, lock, timestamps, recv_mbps, jitter_ms, retrans
     )
     def close_busy_modal(n):
         return "hidden"
+
+    # ─── MODAL BUSY: Usar puerto sugerido (Audit #9) ─────────────────────────
+    @dash_app.callback(
+        [Output("srv-port", "value"),
+         Output("modal-busy", "className", allow_duplicate=True)],
+        Input("btn-modal-busy-use", "n_clicks"),
+        State("modal-busy-suggested", "children"),
+        prevent_initial_call=True
+    )
+    def use_suggested_port(n, suggested_port):
+        if not n: return no_update, no_update
+        try:
+            return int(suggested_port), "hidden"
+        except:
+            return 5201, "hidden"
+
+    # ─── SIDEBAR DOT SYNC (Audit #8) ─────────────────────────────────────────
+    @dash_app.callback(
+        Output("sidebar-srv-dot", "className"),
+        Input("interval-update", "n_intervals"),
+        prevent_initial_call=True
+    )
+    def sync_sidebar_dot(n):
+        try:
+            if current_user.is_authenticated and IperfService.is_server_running(current_user.id):
+                return "w-2 h-2 rounded-full bg-emerald-500 animate-pulse ml-auto sidebar-text"
+            return "w-2 h-2 rounded-full bg-slate-500 ml-auto sidebar-text"
+        except:
+            return "w-2 h-2 rounded-full bg-slate-500 ml-auto sidebar-text"
 
     @dash_app.callback(
         [Output("bw-chart",            "figure"),

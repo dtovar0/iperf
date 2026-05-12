@@ -634,3 +634,105 @@
     box-shadow: 0 6px 15px rgb(var(--color-danger) / 0.3) !important;
 }
 
+/* === SEMANTIC BUTTON STATES (Audit #2) === */
+.iperf-btn--active {
+    background: #ef4444 !important;
+    color: white !important;
+    padding: 0 32px !important;
+    height: 42px !important;
+    border-radius: 8px !important;
+    font-size: var(--text-xs) !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.15em !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: none !important;
+    outline: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+}
+.iperf-btn--active:hover {
+    transform: scale(1.04);
+    box-shadow: 0 6px 15px rgba(239, 68, 68, 0.4) !important;
+    filter: brightness(1.1);
+}
+
+.iperf-btn--error {
+    background: rgb(var(--color-primary)) !important;
+    color: white !important;
+    padding: 0 32px !important;
+    height: 42px !important;
+    border-radius: 8px !important;
+    font-size: var(--text-xs) !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.15em !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: none !important;
+    outline: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 4px 12px rgb(var(--color-primary) / 0.2) !important;
+}
+
+/* === STATUS PILL SEMANTIC STATES (Audit #2) === */
+.iperf-status--online {
+    border-color: rgba(37, 99, 235, 0.2) !important;
+    background: rgba(37, 99, 235, 0.1) !important;
+    box-shadow: 0 0 20px rgba(37, 99, 235, 0.2);
+}
+.iperf-status--standby {
+    border-color: rgba(255, 255, 255, 0.05) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+.iperf-status--error {
+    border-color: rgba(239, 68, 68, 0.2) !important;
+    background: rgba(239, 68, 68, 0.1) !important;
+}
+
+/* === STAT VALUE TRANSITION (Audit #7) === */
+.iperf-stat-value {
+    transition: color 0.3s ease, transform 0.15s ease;
+}
+.iperf-stat-value.flash {
+    color: #10b981 !important;
+    transform: scale(1.08);
+}
+
+/* === MODAL COUNTDOWN BAR (Audit #4) === */
+.modal-countdown-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    width: 100%;
+    background: rgba(16, 185, 129, 0.15);
+    border-radius: 0 0 3rem 3rem;
+    overflow: hidden;
+}
+.modal-countdown-bar__fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #10b981, #06b6d4);
+    animation: countdownShrink 10s linear forwards;
+    border-radius: 0 0 3rem 3rem;
+}
+@keyframes countdownShrink {
+    from { width: 100%; }
+    to   { width: 0%; }
+}
+
+/* === LAST-UPDATE VISIBLE (Audit #5) === */
+.iperf-last-update {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(148, 163, 184, 0.6);
+}
+

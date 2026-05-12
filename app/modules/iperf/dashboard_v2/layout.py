@@ -16,6 +16,6 @@ def get_main_frame(content):
         dcc.Store(id="status-sync-store", data={"server": None, "client": None}),
 
         # Contenedor para notificaciones Toast Premium
-        html.Div(id="toast-container", className="fixed bottom-8 right-8 z-[9999] flex flex-col gap-3"),
+        html.Div(id="toast-container", className="fixed bottom-8 right-8 z-[90] flex flex-col gap-3"),
         dcc.Store(id="toast-trigger", data=None)
     ])

@@ -79,29 +79,36 @@ def init_dashboard(server):
             srv_panel,
             cli_panel,
             his_panel,
-            # Modal (Sincronizado con test/app.py)
+            # Modal de Finalización con barra de progreso (Audit #4)
             html.Div(id="modal-summary", className="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md", children=[
-                html.Div(className="bg-panel-fill border border-panel-border w-[500px] rounded-[3rem] p-12 text-center", children=[
+                html.Div(className="bg-panel-fill border border-panel-border w-[500px] rounded-[3rem] p-12 text-center relative overflow-hidden", children=[
                     html.I(className="fas fa-check-circle text-6xl text-emerald-500 mb-6"),
                     html.H2("SESIÓN FINALIZADA", className="text-2xl font-black text-text uppercase mb-4"),
                     html.P(id="modal-msg", className="text-label/60 text-sm mb-10"),
                     html.Div(className="flex flex-col gap-3", children=[
                         html.A("VER REPORTE DETALLADO", id="modal-download-link", href="#", className="bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-widest"),
                         html.Button("CERRAR", id="btn-modal-close", className="text-label/40 text-xs font-black uppercase")
+                    ]),
+                    # Barra de countdown visual (Audit #4)
+                    html.Div(className="modal-countdown-bar", children=[
+                        html.Div(className="modal-countdown-bar__fill")
                     ])
                 ])
             ]),
-            # Modal de Puerto Ocupado (Rule #11)
+            # Modal de Puerto Ocupado con acción directa (Audit #9)
             html.Div(id="modal-busy", className="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md", children=[
                 html.Div(className="bg-panel-fill border border-panel-border w-[500px] rounded-[3rem] p-12 text-center", children=[
                     html.I(className="fas fa-exclamation-triangle text-6xl text-amber-500 mb-6"),
                     html.H2("PUERTO OCUPADO", className="text-2xl font-black text-text uppercase mb-4"),
-                    html.P(id="modal-busy-msg", className="text-label/60 text-sm mb-10"),
+                    html.P(id="modal-busy-msg", className="text-label/60 text-sm mb-6"),
                     html.Div(className="bg-white/5 p-6 rounded-2xl border border-white/5 mb-8", children=[
                         html.P("PUERTO SUGERIDO:", className="text-2xs font-black text-label/40 tracking-widest mb-2"),
                         html.Span(id="modal-busy-suggested", className="text-4xl font-black text-primary")
                     ]),
-                    html.Button("ENTENDIDO", id="btn-modal-busy-close", className="bg-primary text-white py-4 w-full rounded-2xl font-black uppercase tracking-widest")
+                    html.Div(className="flex flex-col gap-3", children=[
+                        html.Button("USAR PUERTO SUGERIDO", id="btn-modal-busy-use", className="bg-primary text-white py-4 w-full rounded-2xl font-black uppercase tracking-widest hover:scale-[1.02] transition-transform"),
+                        html.Button("CERRAR", id="btn-modal-busy-close", className="text-label/40 text-xs font-black uppercase py-2")
+                    ])
                 ])
             ]),
         ])
