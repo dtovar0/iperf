@@ -17,7 +17,6 @@ services:
       - redis
     volumes:
       - ./logs:/app/logs
-      - ./.env:/app/.env
 
   redis:
     image: redis:alpine
