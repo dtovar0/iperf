@@ -29,8 +29,8 @@ COPY . .
 # Create logs directory
 RUN mkdir -p logs
 
-# Expose ports: 5000 (Flask), 5201 (Iperf3 default)
-EXPOSE 5000 5201
+# Expose ports: 5000 (Flask), 5201-5210 (Iperf3 range)
+EXPOSE 5000 5201-5210
 
 # Command to run the application
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "run:app"]
