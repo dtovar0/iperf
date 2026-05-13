@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: iperf_nexus_app
+    restart: always
+    ports:
+      - "5000:5000"
+      - "5201:5201/tcp"
+      - "5201:5201/udp"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - DB_HOST=db
+    depends_on:
+      - redis
+      - db
+    volumes:
+      - ./logs:/app/logs
+
+  redis:
+    image: redis:alpine
+    container_name: iperf_nexus_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  db:
+    image: mysql:8.0
+    container_name: iperf_nexus_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: iperf_db
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: iperf_user
+      MYSQL_PASSWORD: iperf_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:

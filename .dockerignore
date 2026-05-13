@@ -1,0 +1,14 @@
+venv/
+.git/
+__pycache__/
+*.pyc
+*.log
+.env
+.DS_Store
+node_modules/
+dist/
+build/
+*.sql
+old/
+scratch/
+test/
