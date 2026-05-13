@@ -13,10 +13,8 @@ services:
       - .env
     environment:
       - REDIS_HOST=redis
-      - DB_HOST=db
     depends_on:
       - redis
-      - db
     volumes:
       - ./logs:/app/logs
 
@@ -26,20 +24,3 @@ services:
     restart: always
     ports:
       - "6379:6379"
-
-  db:
-    image: mysql:8.0
-    container_name: iperf_nexus_db
-    restart: always
-    environment:
-      MYSQL_DATABASE: iperf_db
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_USER: iperf_user
-      MYSQL_PASSWORD: iperf_password
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-
-volumes:
-  mysql_data:
